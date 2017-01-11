@@ -28,7 +28,7 @@ public class Archon {
 
                 // Generate a random direction
                 Direction dir = randomDirection();
-                if (rc.getRoundNum() <= 100) {
+                if (rc.getRoundNum() <= 500) {
                     if (rc.canHireGardener(dir) && rc.getTeamBullets() >= 200) {
                         rc.hireGardener(dir);
                     }

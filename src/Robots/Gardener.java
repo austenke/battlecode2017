@@ -83,8 +83,8 @@ public class Gardener {
             Direction dir = helpers.randomDirection();
 
             // Randomly attempt to build a soldier or lumberjack in this direction
-            if (rc.canBuildRobot(RobotType.SOLDIER, dir)) {
-                if (Math.random() < .8) {
+            if (rc.getRobotCount() < 15 || rc.getTeamBullets() >= 300) {
+                if (rc.canBuildRobot(RobotType.SOLDIER, dir)) {
                     rc.buildRobot(RobotType.SOLDIER, dir);
                 }
             }
@@ -119,11 +119,13 @@ public class Gardener {
             Direction dir = helpers.randomDirection();
 
             if (rc.getTreeCount() < 10) {
-                if (rc.canPlantTree(dir) && noTreeInRange(trees)) {
-                    rc.plantTree(dir);
-                } else {
-                    // Move randomly
-                    helpers.tryMove(helpers.randomDirection());
+                if (rc.getTreeCount() < 3 || rc.getTeamBullets() >= 300) {
+                    if (rc.canPlantTree(dir) && noTreeInRange(trees)) {
+                        rc.plantTree(dir);
+                    } else {
+                        // Move randomly
+                        helpers.tryMove(helpers.randomDirection());
+                    }
                 }
             }
             else {

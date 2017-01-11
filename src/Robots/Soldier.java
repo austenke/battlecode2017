@@ -39,7 +39,7 @@ public class Soldier {
                         // ...Then fire a bullet in the direction of the enemy.
                         rc.fireSingleShot(rc.getLocation().directionTo(enemyRobots[0].location));
                     }
-                    if (enemyRobots[0].getLocation().isWithinDistance(rc.getLocation(), rc.getType().sensorRadius - 1)) {
+                    if (enemyRobots[0].getLocation().isWithinDistance(rc.getLocation(), rc.getType().sensorRadius - 2)) {
                         helpers.tryMove(rc.getLocation().directionTo(enemyRobots[0].getLocation()).opposite());
                     } else {
                         helpers.tryMove(rc.getLocation().directionTo(enemyRobots[0].getLocation()));
