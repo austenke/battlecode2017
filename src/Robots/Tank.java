@@ -17,11 +17,9 @@ public class Tank {
         System.out.println("I'm a tank!");
 
         while(true){
-            MapLocation[] locs = rc.senseBroadcastingRobotLocations();
-            RobotInfo[] nlocs = rc.senseNearbyRobots();
-            if(nlocs == null){
-
-            }
+            MapLocation[] blocs = rc.senseBroadcastingRobotLocations();  //broadcasting locations
+            RobotInfo[] nlocs = rc.senseNearbyRobots();  //nearby locations
+            
         }
     }
 }
