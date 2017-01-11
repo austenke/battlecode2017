@@ -119,7 +119,7 @@ public class Gardener {
             Direction dir = helpers.randomDirection();
 
             if (rc.getTreeCount() < 10) {
-                if (rc.getTreeCount() < 3 || rc.getTeamBullets() >= 300) {
+                if (rc.getTreeCount() < 3 || rc.getTeamBullets() >= 150) {
                     if (rc.canPlantTree(dir) && noTreeInRange(trees)) {
                         rc.plantTree(dir);
                     } else {
@@ -133,6 +133,9 @@ public class Gardener {
                     if (noTreeInRange(trees)) {
                         int random = (int) Math.floor(Math.random() * (trees.length - 1));
                         helpers.tryMove(rc.getLocation().directionTo(trees[random].getLocation()));
+                    }
+                    else {
+                        helpers.tryMove(HelperMethods.randomDirection());
                     }
                 }
                 else {
