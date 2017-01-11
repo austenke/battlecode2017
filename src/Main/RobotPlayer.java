@@ -1,4 +1,4 @@
-package examplefuncsplayer;
+package Main;
 import battlecode.common.*;
 import Helpers.HelperMethods;
 import Robots.*;
