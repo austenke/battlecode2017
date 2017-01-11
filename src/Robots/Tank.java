@@ -13,7 +13,6 @@ public class Tank {
     }
 
     public static void run() throws GameActionException{
-        System.out.println("I'm a tank!");
 
         while(true){
             MapLocation[] blocs = rc.senseBroadcastingRobotLocations();  //broadcasting locations
@@ -22,6 +21,7 @@ public class Tank {
             MapLocation Archon = rc.getInitialArchonLocations(rc.getTeam())[0];
 
             if(nlocs == null) {
+                System.out.println("Tank code");
                 //major flaw: if no enemy robots are broadcasting, tank will move towards its furthest ally
                 for(MapLocation loc: blocs){
                     if(Archon.distanceTo(loc) > Archon.distanceTo(floc)){
@@ -29,9 +29,8 @@ public class Tank {
                     }
                 }
                 Direction enemyDir = rc.getLocation().directionTo(floc);
-
                 helpers.tryMove(enemyDir);
-            }else {
+            }else if (rc.canFireTriadShot()) {
                 rc.fireTriadShot(rc.getLocation().directionTo(nlocs[0].getLocation()));
             }
 

@@ -3,6 +3,8 @@ package Robots;
 import Helpers.HelperMethods;
 import battlecode.common.*;
 
+import java.util.Random;
+
 /**
  * Class for gardener robot.
  */
@@ -18,6 +20,7 @@ public class Gardener {
     public static void run() throws GameActionException {
         int gardenerCount = rc.readBroadcast(2);
         int buildOrPlant = -1;
+        int numSoldiers = 0;
         if(gardenerCount > 2 && ((gardenerCount + 1) % 2) == 0) {
             buildOrPlant = 0;
             System.out.println("I'm a builder gardener!");
@@ -41,7 +44,7 @@ public class Gardener {
                     helpers.tryMove(rc.getLocation().directionTo(archonLoc));
                 }
                 else if (buildOrPlant == 0) {
-                    builderGardener();
+                    numSoldiers = builderGardener(numSoldiers);
                 }
                 else if (buildOrPlant == 1) {
                     planterGardener();
@@ -57,7 +60,7 @@ public class Gardener {
         }
     }
 
-    static void builderGardener() throws GameActionException {
+    static int builderGardener(int soldiers) throws GameActionException {
         boolean watering = false;
 
         TreeInfo[] trees = rc.senseNearbyTrees(-1, rc.getTeam());
@@ -84,13 +87,17 @@ public class Gardener {
 
             // Randomly attempt to build a soldier or lumberjack in this direction
             if (rc.getRobotCount() < 15 || rc.getTeamBullets() >= 300) {
-                if (rc.canBuildRobot(RobotType.SOLDIER, dir)) {
+                if (rc.canBuildRobot(RobotType.SOLDIER, dir) && soldiers % 5 > 0) {
                     rc.buildRobot(RobotType.SOLDIER, dir);
                 }
+                else if(rc.canBuildRobot(RobotType.TANK, dir)){
+                    rc.buildRobot(RobotType.TANK, dir);
+                }
+                soldiers ++;
             }
-
             helpers.tryMove(helpers.randomDirection());
         }
+        return soldiers;
     }
 
     static void planterGardener() throws GameActionException {

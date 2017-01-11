@@ -34,7 +34,7 @@ public class Archon {
                     }
                 //} else if (rc.getTeamBullets() >= 800) {
                 //    rc.donate(400);
-                } else if (rc.canHireGardener(dir) && rc.getTeamBullets() >= 300 && (rc.getTeamVictoryPoints() / rc.getRobotCount()) > 30) {
+                } else if (rc.canHireGardener(dir) && rc.getTeamBullets() >= 400) {
                     rc.hireGardener(dir);
                 }
 
