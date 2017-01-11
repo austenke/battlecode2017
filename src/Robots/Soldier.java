@@ -17,7 +17,6 @@ public class Soldier {
     }
 
     public static void run() {
-        System.out.println("I'm an soldier!");
         Team enemy = rc.getTeam().opponent();
 
         // The code you want your robot to perform every round should be in this loop
@@ -32,19 +31,15 @@ public class Soldier {
 
                 // If there are some...
                 if (robots.length > 0) {
-                    System.out.println("Sensed robots");
                     // And we have enough bullets, and haven't attacked yet this turn...
                     if (rc.canFireSingleShot()) {
                         // ...Then fire a bullet in the direction of the enemy.
                         rc.fireSingleShot(rc.getLocation().directionTo(robots[0].location));
-                        System.out.println("-----firing-----");
                     }
-                    else {
-                        if (robots[0].getLocation().isWithinDistance(rc.getLocation(), rc.getType().sensorRadius - 3)) {
-                            helpers.tryMove(rc.getLocation().directionTo(robots[0].getLocation()).opposite());
-                        } else {
-                            helpers.tryMove(rc.getLocation().directionTo(robots[0].getLocation()));
-                        }
+                    if (robots[0].getLocation().isWithinDistance(rc.getLocation(), rc.getType().sensorRadius - 1)) {
+                        helpers.tryMove(rc.getLocation().directionTo(robots[0].getLocation()).opposite());
+                    } else {
+                        helpers.tryMove(rc.getLocation().directionTo(robots[0].getLocation()));
                     }
                 }
                 else {

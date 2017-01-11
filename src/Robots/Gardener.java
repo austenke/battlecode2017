@@ -18,7 +18,7 @@ public class Gardener {
     public static void run() throws GameActionException {
         int gardenerCount = rc.readBroadcast(2);
         int buildOrPlant = -1;
-        if(((gardenerCount + 1) % 2) == 0) {
+        if(gardenerCount > 2 && ((gardenerCount + 1) % 2) == 0) {
             buildOrPlant = 0;
             System.out.println("I'm a builder gardener!");
         }
@@ -37,7 +37,7 @@ public class Gardener {
                 MapLocation archonLoc = rc.getInitialArchonLocations(rc.getTeam())[0];
 
 
-                if (rc.getLocation().isWithinDistance(archonLoc, 10)) {
+                if (!rc.getLocation().isWithinDistance(archonLoc, 20)) {
                     helpers.tryMove(rc.getLocation().directionTo(archonLoc));
                 }
                 else if (buildOrPlant == 0) {
@@ -70,7 +70,6 @@ public class Gardener {
                         rc.water(tree.getLocation());
                         Clock.yield();
                     }
-                    //System.out.println("Stopping water");
                 }
                 else {
                     helpers.tryMove(rc.getLocation().directionTo(tree.getLocation()));
@@ -91,16 +90,10 @@ public class Gardener {
             }
 
             helpers.tryMove(helpers.randomDirection());
-
         }
-
-        // Move randomly
-        //tryMove(randomDirection());
     }
 
     static void planterGardener() throws GameActionException {
-        // Generate a random direction
-        Direction dir = helpers.randomDirection();
         boolean watering = false;
 
         TreeInfo[] trees = rc.senseNearbyTrees(-1, rc.getTeam());
@@ -113,7 +106,6 @@ public class Gardener {
                         rc.water(tree.getLocation());
                         Clock.yield();
                     }
-                    //System.out.println("Stopping water");
                 }
                 else {
                     helpers.tryMove(rc.getLocation().directionTo(tree.getLocation()));
@@ -123,13 +115,39 @@ public class Gardener {
         }
 
         if (!watering) {
-            // Randomly attempt to plant a tree in this direction
-            if (rc.canPlantTree(dir) && rc.getTreeCount() < 10) {
-                rc.plantTree(dir);
-            } else {
-                // Move randomly
-                helpers.tryMove(helpers.randomDirection());
+            // Generate a random direction
+            Direction dir = helpers.randomDirection();
+
+            if (rc.getTreeCount() < 10) {
+                if (rc.canPlantTree(dir) && noTreeInRange(trees)) {
+                    rc.plantTree(dir);
+                } else {
+                    // Move randomly
+                    helpers.tryMove(helpers.randomDirection());
+                }
+            }
+            else {
+                if (trees.length > 0) {
+                    if (noTreeInRange(trees)) {
+                        int random = (int) Math.floor(Math.random() * (trees.length - 1));
+                        helpers.tryMove(rc.getLocation().directionTo(trees[random].getLocation()));
+                    }
+                }
+                else {
+                    helpers.tryMove(HelperMethods.randomDirection());
+                }
             }
         }
     }
+
+    static boolean noTreeInRange(TreeInfo[] trees) {
+        for (TreeInfo tree : trees) {
+            if (rc.getLocation().isWithinDistance(tree.getLocation(), 5)) {
+                return false;
+            }
+        }
+        return true;
+    }
 }
+
+

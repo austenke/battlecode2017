@@ -28,6 +28,20 @@ public class HelperMethods {
      * @throws GameActionException
      */
     public static boolean tryMove(Direction dir) throws GameActionException {
+        BulletInfo[] bullets = rc.senseNearbyBullets();
+        if (bullets.length > 0) {
+            BulletInfo closestBullet = bullets[0];
+
+            for (BulletInfo bullet : bullets) {
+                if (closestBullet.getLocation().distanceTo(rc.getLocation()) >
+                        bullet.getLocation().distanceTo(rc.getLocation())) {
+                    closestBullet = bullet;
+                }
+            }
+
+            return tryMove(closestBullet.getDir().rotateLeftDegrees(90),20,3);
+        }
+
         return tryMove(dir,20,3);
     }
 
