@@ -24,7 +24,7 @@ public class Tank {
                 MapLocation enemyArchon = rc.getInitialArchonLocations(rc.getTeam().opponent())[0];
 
                 if (nlocs.length == 0) {
-                    System.out.println("Tank code");
+                    //System.out.println("Tank code");
                     //major flaw: if no enemy robots are broadcasting, tank will move towards its furthest ally
                     if(blocs.length != 0){
                         for (MapLocation loc : blocs) {

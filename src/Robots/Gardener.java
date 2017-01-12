@@ -43,8 +43,8 @@ public class Gardener {
 
                 MapLocation archonLoc = rc.getInitialArchonLocations(rc.getTeam())[0];
 
-                if (!rc.getLocation().isWithinDistance(archonLoc, 20)) {
-                    float toRotate = (float) Math.random() * 90;
+                if (!rc.getLocation().isWithinDistance(archonLoc, 25)) {
+                    float toRotate = (float) Math.random() * 70;
                     Direction archonDir = rc.getLocation().directionTo(archonLoc);
                     if (Math.random() > .5) {
                         archonDir = archonDir.rotateLeftDegrees(toRotate);
@@ -95,20 +95,40 @@ public class Gardener {
         }
 
         if (!watering) {
-            // Generate a random direction
-            Direction dir = helpers.randomDirection();
+            MapLocation archonLoc = rc.getInitialArchonLocations(rc.getTeam())[0];
 
-            // Randomly attempt to build a soldier or lumberjack in this direction
-            if (rc.getRobotCount() < 15 || rc.getTeamBullets() >= 300) {
-                if (rc.canBuildRobot(RobotType.SOLDIER, dir) && soldierCount % 5 > 0) {
-                    rc.buildRobot(RobotType.SOLDIER, dir);
+            if (!rc.getLocation().isWithinDistance(archonLoc, 15)) {
+                // Generate a random direction
+                Direction dir = helpers.randomDirection();
+
+                // Randomly attempt to build a soldier or lumberjack in this direction
+                if (rc.getRobotCount() < 15 || rc.getTeamBullets() >= 300) {
+                    if (rc.canBuildRobot(RobotType.SOLDIER, dir) && soldierCount % 5 > 0) {
+                        rc.buildRobot(RobotType.SOLDIER, dir);
+                    } else if (rc.canBuildRobot(RobotType.TANK, dir)) {
+                        rc.buildRobot(RobotType.TANK, dir);
+                    }
+                    soldierCount++;
                 }
-                else if(rc.canBuildRobot(RobotType.TANK, dir)){
-                    rc.buildRobot(RobotType.TANK, dir);
-                }
-                soldierCount ++;
+                helpers.tryMove(helpers.randomDirection());
             }
-            helpers.tryMove(helpers.randomDirection());
+            else {
+                float toRotate = (float) Math.random() * 70;
+                Direction archonDir = rc.getLocation().directionTo(archonLoc).opposite();
+                if (Math.random() > .5) {
+                    archonDir = archonDir.rotateLeftDegrees(toRotate);
+                }
+                else {
+                    archonDir = archonDir.rotateRightDegrees(toRotate);
+                }
+                goingDir = archonDir;
+
+                if(rc.canMove(goingDir)){
+                    HelperMethods.tryMove(goingDir);
+                }else{
+                    goingDir = HelperMethods.randomDirection();
+                }
+            }
         }
         return soldierCount;
     }
@@ -190,16 +210,6 @@ public class Gardener {
     static boolean noTreeInRange(int range) {
         for (TreeInfo tree : rc.senseNearbyTrees(-1, rc.getTeam())) {
             if (rc.getLocation().isWithinDistance(tree.getLocation(), range)) {
-                return false;
-            }
-        }
-
-        return true;
-    }
-
-    static boolean noArchonInRange() {
-        for (RobotInfo robot : rc.senseNearbyRobots(-1, rc.getTeam())) {
-            if (robot.type == RobotType.ARCHON && rc.getLocation().isWithinDistance(robot.getLocation(), 3)) {
                 return false;
             }
         }
