@@ -25,6 +25,7 @@ public class Soldier {
             // Try/catch blocks stop unhandled exceptions, which cause your robot to explode
             try {
                 MapLocation myLocation = rc.getLocation();
+                MapLocation tankLoc = new MapLocation(rc.readBroadcast(0),rc.readBroadcast(1));
 
                 // See if there are any nearby enemy robots
                 RobotInfo[] enemyRobots = rc.senseNearbyRobots(-1, enemy);
@@ -52,8 +53,13 @@ public class Soldier {
                     }
                 }
                 else {
-                    // Move randomly
-                    helpers.tryMove(helpers.randomDirection());
+                    //follow tank
+                    if(tankLoc != null && myLocation.distanceTo(tankLoc) >= 20){
+                        helpers.tryMove(myLocation.directionTo(tankLoc));
+                    }
+                    else{
+                        helpers.tryMove(helpers.randomDirection());
+                    }
                 }
 
                 // Clock.yield() makes the robot wait until the next turn, then it will perform this loop again
