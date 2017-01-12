@@ -14,6 +14,7 @@ public class Gardener {
     static RobotController rc;
     static HelperMethods helpers;
     static Direction goingDir;
+    static MapLocation myArchon;
 
     public Gardener(RobotController rc, HelperMethods helpers) {
         this.rc = rc;
@@ -35,17 +36,21 @@ public class Gardener {
         }
         rc.broadcast(2,gardenerCount + 1);
 
+        myArchon = rc.getInitialArchonLocations(rc.getTeam())[0];
+        for (MapLocation archonLoc : rc.getInitialArchonLocations(rc.getTeam())) {
+            if (rc.getLocation().distanceTo(archonLoc) < rc.getLocation().distanceTo(myArchon)) {
+                myArchon = archonLoc;
+            }
+        }
+
         // The code you want your robot to perform every round should be in this loop
         while (true) {
 
             // Try/catch blocks stop unhandled exceptions, which cause your robot to explode
             try {
-
-                MapLocation archonLoc = rc.getInitialArchonLocations(rc.getTeam())[0];
-
-                if (!rc.getLocation().isWithinDistance(archonLoc, 25)) {
+                if (!rc.getLocation().isWithinDistance(myArchon, 25)) {
                     float toRotate = (float) Math.random() * 70;
-                    Direction archonDir = rc.getLocation().directionTo(archonLoc);
+                    Direction archonDir = rc.getLocation().directionTo(myArchon);
                     if (Math.random() > .5) {
                         archonDir = archonDir.rotateLeftDegrees(toRotate);
                     }
@@ -53,7 +58,11 @@ public class Gardener {
                         archonDir = archonDir.rotateRightDegrees(toRotate);
                     }
                     goingDir = archonDir;
-                    helpers.tryMove(archonDir);
+
+                    if(!rc.canMove(goingDir)){
+                        goingDir = HelperMethods.randomDirection();
+                    }
+                    HelperMethods.tryMove(goingDir);
                 }
                 else if (buildOrPlant == 0) {
                     numSoldiers = builderGardener(numSoldiers);
@@ -95,9 +104,7 @@ public class Gardener {
         }
 
         if (!watering) {
-            MapLocation archonLoc = rc.getInitialArchonLocations(rc.getTeam())[0];
-
-            if (!rc.getLocation().isWithinDistance(archonLoc, 15)) {
+            if (!rc.getLocation().isWithinDistance(myArchon, 15)) {
                 // Generate a random direction
                 Direction dir = helpers.randomDirection();
 
@@ -114,7 +121,7 @@ public class Gardener {
             }
             else {
                 float toRotate = (float) Math.random() * 70;
-                Direction archonDir = rc.getLocation().directionTo(archonLoc).opposite();
+                Direction archonDir = rc.getLocation().directionTo(myArchon).opposite();
                 if (Math.random() > .5) {
                     archonDir = archonDir.rotateLeftDegrees(toRotate);
                 }
@@ -123,11 +130,10 @@ public class Gardener {
                 }
                 goingDir = archonDir;
 
-                if(rc.canMove(goingDir)){
-                    HelperMethods.tryMove(goingDir);
-                }else{
+                if(!rc.canMove(goingDir)){
                     goingDir = HelperMethods.randomDirection();
                 }
+                HelperMethods.tryMove(goingDir);
             }
         }
         return soldierCount;
@@ -164,11 +170,10 @@ public class Gardener {
         if (!watering) {
             if (rc.getTreeCount() < 15) {
                 tryToPlant();
-                if(rc.canMove(goingDir)){
-                    HelperMethods.tryMove(goingDir);
-                }else{
+                if(!rc.canMove(goingDir)){
                     goingDir = HelperMethods.randomDirection();
                 }
+                HelperMethods.tryMove(goingDir);
             }
             else {
                 if (trees.length > 0) {
@@ -189,7 +194,7 @@ public class Gardener {
 
     public static void tryToPlant() throws GameActionException{
         Direction[] dirList = RobotPlayer.getDirList();
-        if(rc.getTeamBullets()>GameConstants.BULLET_TREE_COST) {//have enough bullets. assuming we haven't built already.
+        if(rc.getTeamBullets()>GameConstants.BULLET_TREE_COST && rc.getLocation().distanceTo(myArchon) > 3) {//have enough bullets. assuming we haven't built already.
             for (int i = 0; i < 4; i++) {
                 //only plant trees on a sub-grid
                 MapLocation p = rc.getLocation().add(dirList[i],GameConstants.GENERAL_SPAWN_OFFSET+GameConstants.BULLET_TREE_RADIUS+rc.getType().bodyRadius);
