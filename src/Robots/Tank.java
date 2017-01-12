@@ -14,8 +14,9 @@ public class Tank {
 
     public static void run() throws GameActionException{
 
-        try {
+
             while (true) {
+                try {
                 MapLocation[] blocs = rc.senseBroadcastingRobotLocations();  //broadcasting locations
                 RobotInfo[] nlocs = rc.senseNearbyRobots(10, rc.getTeam().opponent());  //nearby locations
                 MapLocation floc = rc.getLocation();
@@ -50,10 +51,10 @@ public class Tank {
                     }
                 }
                 Clock.yield();
+            }catch(Exception e) {
+                    System.out.println("Soldier Exception");
+                    e.printStackTrace();
             }
-        }catch(Exception e) {
-            System.out.println("Soldier Exception");
-            e.printStackTrace();
         }
     }
 }
