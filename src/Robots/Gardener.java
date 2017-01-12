@@ -1,6 +1,7 @@
 package Robots;
 
 import Helpers.HelperMethods;
+import Main.RobotPlayer;
 import battlecode.common.*;
 
 import java.util.ArrayList;
@@ -134,14 +135,19 @@ public class Gardener {
             Direction dir = helpers.randomDirection();
 
             if (rc.getTreeCount() < 10) {
-                if (rc.getTreeCount() < 4 || rc.getTeamBullets() >= 150) {
-                    if (rc.canPlantTree(dir) && noTreeInRange(5) && noArchonInRange()) {
-                        rc.plantTree(dir);
-                        return;
+                if ((rc.getTreeCount() < 4 || rc.getTeamBullets() >= 150)
+                        && noTreeInRange(5) && noArchonInRange()) {
+                    for (Direction plantDir : RobotPlayer.getDirList()) {
+                        if (rc.canPlantTree(plantDir)) {
+                            rc.plantTree(plantDir);
+                            return;
+                        }
                     }
                 }
-                // Move Towards middle of map
-                helpers.tryMove(HelperMethods.randomDirection());
+                else {
+                    // Move randomly
+                    helpers.tryMove(HelperMethods.randomDirection());
+                }
             }
             else {
                 if (trees.length > 0) {

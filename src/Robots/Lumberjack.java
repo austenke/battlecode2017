@@ -17,57 +17,31 @@ public class Lumberjack {
 
 
     public static void run() throws GameActionException {
-        System.out.println("I'm a lumberjack!");
-        Team enemy = rc.getTeam().opponent();
-
-        // The code you want your robot to perform every round should be in this loop
         while (true) {
-
-            // Try/catch blocks stop unhandled exceptions, which cause your robot to explode
             try {
-
-                // See if there are any enemy robots within striking range (distance 1 from lumberjack's radius)
-                RobotInfo[] robots = rc.senseNearbyRobots(RobotType.LUMBERJACK.bodyRadius+ GameConstants.LUMBERJACK_STRIKE_RADIUS, enemy);
-
-                TreeInfo[] trees = rc.senseNearbyTrees(-1, Team.NEUTRAL);
-                System.out.println(trees.toString());
-
-                if(trees.length > 0) {
-                    MapLocation myLocation = rc.getLocation();
-                    MapLocation treeLocation = trees[0].getLocation();
-                    if(rc.canChop(treeLocation)) {
-                        rc.chop(treeLocation);
-                    }
-                    else {
-                        Direction toTree = myLocation.directionTo(treeLocation);
-                        helpers.tryMove(toTree);
+                RobotInfo[] bots = rc.senseNearbyRobots();
+                for (RobotInfo b : bots) {
+                    if (b.getTeam() != rc.getTeam() && rc.canStrike()) {
+                        rc.strike();
+                        Direction chase = rc.getLocation().directionTo(b.getLocation());
+                        if (rc.canMove(chase)) {
+                            rc.move(chase);
+                        }
+                        break;
                     }
                 }
-                if(robots.length > 0 && !rc.hasAttacked()) {
-                    // Use strike() to hit all nearby robots!
-                    rc.strike();
-                } else {
-                    // No close robots, so search for robots within sight radius
-                    robots = rc.senseNearbyRobots(-1,enemy);
-
-                    // If there is a robot, move towards it
-                    if(robots.length > 0) {
-                        MapLocation myLocation = rc.getLocation();
-                        MapLocation enemyLocation = robots[0].getLocation();
-                        Direction toEnemy = myLocation.directionTo(enemyLocation);
-
-                        helpers.tryMove(toEnemy);
-                    } else {
-                        // Move Randomly
-                        helpers.tryMove(helpers.randomDirection());
+                TreeInfo[] trees = rc.senseNearbyTrees();
+                for (TreeInfo t : trees) {
+                    if (rc.canChop(t.getLocation()) && t.getTeam() != rc.getTeam()) {
+                        rc.chop(t.getLocation());
+                        break;
                     }
                 }
-
-                // Clock.yield() makes the robot wait until the next turn, then it will perform this loop again
+                if (! rc.hasAttacked()) {
+                    HelperMethods.tryMove(HelperMethods.randomDirection());
+                }
                 Clock.yield();
-
             } catch (Exception e) {
-                System.out.println("Lumberjack Exception");
                 e.printStackTrace();
             }
         }
