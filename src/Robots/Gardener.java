@@ -147,24 +147,27 @@ public class Gardener {
 
         TreeInfo[] trees = rc.senseNearbyTrees(-1, rc.getTeam());
         ArrayList<TreeInfo> treesToWater = new ArrayList<>();
+        TreeInfo worstTree = null;
 
         if (trees.length > 0) {
             for (TreeInfo tree : trees) {
-                if (tree.health < 30) {
+                if (tree.getHealth() < GameConstants.BULLET_TREE_MAX_HEALTH-GameConstants.WATER_HEALTH_REGEN_RATE) {
                     treesToWater.add(tree);
+                    if (worstTree == null || worstTree.getHealth() > tree.getHealth()) {
+                        worstTree = tree;
+                    }
                 }
             }
 
             if (treesToWater.size() > 0) {
-                TreeInfo tree = treesToWater.get(treesToWater.size() - 1);
                 watering = true;
-                if (rc.canWater(tree.getLocation())) {
-                    for (int i = 0; i < 5; i++) {
-                        rc.water(tree.getLocation());
+                if (rc.canWater(worstTree.getLocation())) {
+                    while (worstTree.getHealth() < 45 && rc.canWater(worstTree.getLocation())) {
+                        rc.water(worstTree.getLocation());
                         Clock.yield();
                     }
                 } else {
-                    helpers.tryMove(rc.getLocation().directionTo(tree.getLocation()));
+                    helpers.tryMove(rc.getLocation().directionTo(worstTree.getLocation()));
                     Clock.yield();
                 }
             }
