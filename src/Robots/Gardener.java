@@ -36,10 +36,13 @@ public class Gardener {
         }
         rc.broadcast(2,gardenerCount + 1);
 
-        myArchon = rc.getInitialArchonLocations(rc.getTeam())[0];
-        for (MapLocation archonLoc : rc.getInitialArchonLocations(rc.getTeam())) {
-            if (rc.getLocation().distanceTo(archonLoc) < rc.getLocation().distanceTo(myArchon)) {
-                myArchon = archonLoc;
+        MapLocation[] archons = rc.getInitialArchonLocations(rc.getTeam());
+        myArchon = archons[0];
+        if (archons.length > 1) {
+            for (MapLocation archonLoc : archons) {
+                if (rc.getLocation().distanceTo(archonLoc) < rc.getLocation().distanceTo(myArchon)) {
+                    myArchon = archonLoc;
+                }
             }
         }
 

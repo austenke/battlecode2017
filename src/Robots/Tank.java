@@ -52,7 +52,7 @@ public class Tank {
                 }
                 Clock.yield();
             }catch(Exception e) {
-                    System.out.println("Soldier Exception");
+                    System.out.println("Tank Exception");
                     e.printStackTrace();
             }
         }
