@@ -2,6 +2,8 @@ package Robots;
 
 import Helpers.HelperMethods;
 import battlecode.common.*;
+import org.apache.commons.lang3.ObjectUtils;
+import scala.tools.nsc.backend.jvm.analysis.Null;
 
 public class Tank {
     static RobotController rc;
@@ -24,7 +26,7 @@ public class Tank {
                 MapLocation enemyArchon = rc.getInitialArchonLocations(rc.getTeam().opponent())[0];
 
                 if (nlocs.length == 0) {
-                    //System.out.println("Tank code");
+                    System.out.println("Tank code");
                     //major flaw: if no enemy robots are broadcasting, tank will move towards its furthest ally
                     if(blocs.length != 0){
                         for (MapLocation loc : blocs) {
@@ -33,7 +35,12 @@ public class Tank {
                             }
                         }
                         Direction enemyDir = rc.getLocation().directionTo(floc);
-                        helpers.tryMove(enemyDir);
+                        if(enemyDir == null){
+                            helpers.tryMove(enemyDir);
+                        }
+                        else{
+                            helpers.tryMove(helpers.randomDirection());
+                        }
                     } else{
                         helpers.tryMove(rc.getLocation().directionTo(enemyArchon));
                     }
@@ -52,7 +59,7 @@ public class Tank {
                 }
                 Clock.yield();
             }catch(Exception e) {
-                    System.out.println("Tank Exception");
+                    System.out.println("Soldier Exception");
                     e.printStackTrace();
             }
         }
