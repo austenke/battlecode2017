@@ -39,7 +39,6 @@ public class Gardener {
 
                 MapLocation archonLoc = rc.getInitialArchonLocations(rc.getTeam())[0];
 
-
                 if (!rc.getLocation().isWithinDistance(archonLoc, 20)) {
                     helpers.tryMove(rc.getLocation().directionTo(archonLoc));
                 }
@@ -61,6 +60,7 @@ public class Gardener {
     }
 
     static int builderGardener(int soldiers) throws GameActionException {
+        int soldierCount = soldiers;
         boolean watering = false;
 
         TreeInfo[] trees = rc.senseNearbyTrees(-1, rc.getTeam());
@@ -87,17 +87,17 @@ public class Gardener {
 
             // Randomly attempt to build a soldier or lumberjack in this direction
             if (rc.getRobotCount() < 15 || rc.getTeamBullets() >= 300) {
-                if (rc.canBuildRobot(RobotType.SOLDIER, dir) && soldiers % 5 > 0) {
+                if (rc.canBuildRobot(RobotType.SOLDIER, dir) && soldierCount % 5 > 0) {
                     rc.buildRobot(RobotType.SOLDIER, dir);
                 }
                 else if(rc.canBuildRobot(RobotType.TANK, dir)){
                     rc.buildRobot(RobotType.TANK, dir);
                 }
-                soldiers ++;
+                soldierCount ++;
             }
             helpers.tryMove(helpers.randomDirection());
         }
-        return soldiers;
+        return soldierCount;
     }
 
     static void planterGardener() throws GameActionException {
@@ -127,17 +127,17 @@ public class Gardener {
 
             if (rc.getTreeCount() < 10) {
                 if (rc.getTreeCount() < 3 || rc.getTeamBullets() >= 150) {
-                    if (rc.canPlantTree(dir) && noTreeInRange(trees)) {
+                    if (rc.canPlantTree(dir) && noTreeInRange(8) && noArchonInRange()) {
                         rc.plantTree(dir);
-                    } else {
-                        // Move randomly
-                        helpers.tryMove(helpers.randomDirection());
+                        return;
                     }
                 }
+                // Move Towards middle of map
+                helpers.tryMove(HelperMethods.randomDirection());
             }
             else {
                 if (trees.length > 0) {
-                    if (noTreeInRange(trees)) {
+                    if (noTreeInRange(3)) {
                         int random = (int) Math.floor(Math.random() * (trees.length - 1));
                         helpers.tryMove(rc.getLocation().directionTo(trees[random].getLocation()));
                     }
@@ -152,12 +152,23 @@ public class Gardener {
         }
     }
 
-    static boolean noTreeInRange(TreeInfo[] trees) {
-        for (TreeInfo tree : trees) {
-            if (rc.getLocation().isWithinDistance(tree.getLocation(), 5)) {
+    static boolean noTreeInRange(int range) {
+        for (TreeInfo tree : rc.senseNearbyTrees(-1, rc.getTeam())) {
+            if (rc.getLocation().isWithinDistance(tree.getLocation(), range)) {
                 return false;
             }
         }
+
+        return true;
+    }
+
+    static boolean noArchonInRange() {
+        for (RobotInfo robot : rc.senseNearbyRobots(-1, rc.getTeam())) {
+            if (robot.type == RobotType.ARCHON && rc.getLocation().isWithinDistance(robot.getLocation(), 30)) {
+                return false;
+            }
+        }
+
         return true;
     }
 }

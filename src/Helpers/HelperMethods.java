@@ -2,6 +2,7 @@ package Helpers;
 
 import battlecode.common.*;
 
+import java.lang.reflect.Array;
 import java.util.ArrayList;
 
 /**
@@ -33,13 +34,18 @@ public class HelperMethods {
         // Find nearby bullets
         BulletInfo[] bullets = rc.senseNearbyBullets();
 
+        ArrayList<Float> floats = new ArrayList<Float>();
+        for (BulletInfo bullet : bullets) {
+            floats.add(rc.getLocation().distanceTo(bullet.getLocation()));
+        }
+
         if (bullets.length > 0) {
             // List for bullets on collision course with robot
             ArrayList<BulletInfo> bulletsWillCollide = new ArrayList<>();
 
             // Initialize bulletsWillCollide
             for (BulletInfo bullet : bullets) {
-                if (willCollideWithMe(bullet)) {
+                if (willCollideWithMe(rc.getLocation(), bullet)) {
                     bulletsWillCollide.add(bullet);
                 }
             }
@@ -49,22 +55,6 @@ public class HelperMethods {
                 // Find the closest bullet
                 BulletInfo closestBullet = bulletsWillCollide.get(bulletsWillCollide.size() - 1);
                 BulletInfo secondClosestBullet = bulletsWillCollide.get(bulletsWillCollide.size() - 2);
-//                ArrayList<Float> float2 = new ArrayList<>();
-//                for (BulletInfo bullet : bulletsWillCollide) {
-//                    float2.add(bullet.getLocation().distanceTo(rc.getLocation()));
-//                }
-//                for (BulletInfo bullet : bulletsWillCollide) {
-//                    if (closestBullet.getLocation().distanceTo(rc.getLocation()) >
-//                            bullet.getLocation().distanceTo(rc.getLocation())) {
-//                        closestBullet = bullet;
-//                    } else if (secondClosestBullet.getLocation().distanceTo(rc.getLocation()) >
-//                            bullet.getLocation().distanceTo(rc.getLocation()) && bullet.getID() != closestBullet.getID()) {
-//                        secondClosestBullet = bullet;
-//                    }
-//                    //System.out.println("Closest: " + closestBullet.getLocation().distanceTo(rc.getLocation()));
-//                    //System.out.println("Second closest: " + secondClosestBullet.getLocation().distanceTo(rc.getLocation()));
-//                    //System.out.println("Collision bullets: " + float2);
-//                }
 
                 // Find direction that will move the robot out of the closest bullet path and away from second
                 // closest bullet and move.
@@ -79,11 +69,34 @@ public class HelperMethods {
                     return tryMove(closestBulletDirection.rotateRightDegrees(90), 20, 3);
                 }
             } else if (bulletsWillCollide.size() == 1) {
-                // Immediately move 90 degrees to the left of it
-                return tryMove(bulletsWillCollide.get(0).getDir().rotateLeftDegrees(90), 20, 3);
+                BulletInfo secondClosest = bullets[bullets.length - 1];
+                if (secondClosest.getID() == bulletsWillCollide.get(0).getID() && bullets.length > 1) {
+                    secondClosest = bullets[bullets.length - 2];
+                }
+
+                Direction closestBulletDirection = bulletsWillCollide.get(0).getDir();
+                MapLocation leftOfClosestBullet = rc.getLocation().add(closestBulletDirection.rotateLeftDegrees(90));
+                MapLocation rightOfClosestBullet = rc.getLocation().add(closestBulletDirection.rotateRightDegrees(90));
+
+                if (secondClosest.getLocation().distanceTo(leftOfClosestBullet) >
+                        secondClosest.getLocation().distanceTo(rightOfClosestBullet)) {
+                    return tryMove(closestBulletDirection.rotateLeftDegrees(90), 20, 3);
+                } else {
+                    return tryMove(closestBulletDirection.rotateRightDegrees(90), 20, 3);
+                }
+            }
+            else {
+                for (BulletInfo bullet : bullets) {
+                    if (willCollideWithMe(rc.getLocation().add(dir), bullet)) {
+                        return false;
+                    }
+                }
+                return tryMove(dir, 20, 3);
             }
         }
-        return tryMove(dir, 20, 3);
+        else {
+            return tryMove(dir, 20, 3);
+        }
     }
 
     /**
@@ -137,8 +150,8 @@ public class HelperMethods {
      * @param bullet The bullet in question
      * @return True if the line of the bullet's path intersects with this robot's current position.
      */
-    public static boolean willCollideWithMe(BulletInfo bullet) {
-        MapLocation myLocation = rc.getLocation();
+    public static boolean willCollideWithMe(MapLocation loc, BulletInfo bullet) {
+        MapLocation myLocation = loc;
 
         // Get relevant bullet information
         Direction propagationDirection = bullet.dir;
