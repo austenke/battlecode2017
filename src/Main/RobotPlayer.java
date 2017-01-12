@@ -7,6 +7,7 @@ import com.sun.tools.corba.se.idl.toJavaPortable.Helper;
 public strictfp class RobotPlayer {
     static RobotController rc;
     static HelperMethods helpers;
+    static Direction[] dirList = new Direction[9];
 
     /**
      * run() is the method that is called when a robot is instantiated in the Battlecode world.
@@ -19,6 +20,7 @@ public strictfp class RobotPlayer {
         // and to get information on its current status.
         RobotPlayer.rc = rc;
         helpers = new HelperMethods(rc);
+        initDirList(9);
 
         // Here, we've separated the controls into a different method for each RobotType.
         // You can add the missing ones or rewrite this into your own control structure.
@@ -40,4 +42,19 @@ public strictfp class RobotPlayer {
                 break;
         }
 	}
+
+    public static void initDirList(int size){
+        float angleChange = 360 / size;
+        System.out.println("angleChange " + angleChange);
+        for(int i=0;i<size;i++){
+            float angle = angleChange * i;
+            dirList[i]=new Direction((float) Math.toRadians(angle));
+            System.out.println("angle " + angle);
+            System.out.println("made new direction "+dirList[i]);
+        }
+    }
+
+    public static Direction[] getDirList(){
+        return dirList;
+    }
 }
