@@ -36,8 +36,18 @@ public class Tank {
                     } else{
                         helpers.tryMove(rc.getLocation().directionTo(enemyArchon));
                     }
-                } else if (rc.canFireTriadShot()) {
-                    rc.fireTriadShot(rc.getLocation().directionTo(nlocs[nlocs.length-1].getLocation()));
+                } else {
+                    if (rc.canFireTriadShot()) {
+                        rc.fireTriadShot(rc.getLocation().directionTo(nlocs[nlocs.length - 1].getLocation()));
+                    }
+                    if (rc.canFireSingleShot()){
+                        rc.fireTriadShot(rc.getLocation().directionTo(nlocs[nlocs.length - 1].getLocation()));
+                    }
+                    if (nlocs[0].getLocation().isWithinDistance(rc.getLocation(), rc.getType().sensorRadius - 2)) {
+                        helpers.tryMove(rc.getLocation().directionTo(nlocs[0].getLocation()).opposite());
+                    } else {
+                        helpers.tryMove(rc.getLocation().directionTo(nlocs[0].getLocation()));
+                    }
                 }
                 Clock.yield();
             }
