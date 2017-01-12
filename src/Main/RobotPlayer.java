@@ -45,12 +45,9 @@ public strictfp class RobotPlayer {
 
     public static void initDirList(int size){
         float angleChange = 360 / size;
-        System.out.println("angleChange " + angleChange);
         for(int i=0;i<size;i++){
             float angle = angleChange * i;
             dirList[i]=new Direction((float) Math.toRadians(angle));
-            System.out.println("angle " + angle);
-            System.out.println("made new direction "+dirList[i]);
         }
     }
 

@@ -13,6 +13,7 @@ import java.util.Random;
 public class Gardener {
     static RobotController rc;
     static HelperMethods helpers;
+    static Direction goingDir;
 
     public Gardener(RobotController rc, HelperMethods helpers) {
         this.rc = rc;
@@ -20,6 +21,7 @@ public class Gardener {
     }
 
     public static void run() throws GameActionException {
+        goingDir = HelperMethods.randomDirection();
         int gardenerCount = rc.readBroadcast(2);
         int buildOrPlant = -1;
         int numSoldiers = 0;
@@ -42,7 +44,16 @@ public class Gardener {
                 MapLocation archonLoc = rc.getInitialArchonLocations(rc.getTeam())[0];
 
                 if (!rc.getLocation().isWithinDistance(archonLoc, 20)) {
-                    helpers.tryMove(rc.getLocation().directionTo(archonLoc));
+                    float toRotate = (float) Math.random() * 90;
+                    Direction archonDir = rc.getLocation().directionTo(archonLoc);
+                    if (Math.random() > .5) {
+                        archonDir = archonDir.rotateLeftDegrees(toRotate);
+                    }
+                    else {
+                        archonDir = archonDir.rotateRightDegrees(toRotate);
+                    }
+                    goingDir = archonDir;
+                    helpers.tryMove(archonDir);
                 }
                 else if (buildOrPlant == 0) {
                     numSoldiers = builderGardener(numSoldiers);
@@ -131,22 +142,12 @@ public class Gardener {
         }
 
         if (!watering) {
-            // Generate a random direction
-            Direction dir = helpers.randomDirection();
-
-            if (rc.getTreeCount() < 10) {
-                if ((rc.getTreeCount() < 4 || rc.getTeamBullets() >= 150)
-                        && noTreeInRange(5) && noArchonInRange()) {
-                    for (Direction plantDir : RobotPlayer.getDirList()) {
-                        if (rc.canPlantTree(plantDir)) {
-                            rc.plantTree(plantDir);
-                            return;
-                        }
-                    }
-                }
-                else {
-                    // Move randomly
-                    helpers.tryMove(HelperMethods.randomDirection());
+            if (rc.getTreeCount() < 15) {
+                tryToPlant();
+                if(rc.canMove(goingDir)){
+                    HelperMethods.tryMove(goingDir);
+                }else{
+                    goingDir = HelperMethods.randomDirection();
                 }
             }
             else {
@@ -166,6 +167,26 @@ public class Gardener {
         }
     }
 
+    public static void tryToPlant() throws GameActionException{
+        Direction[] dirList = RobotPlayer.getDirList();
+        if(rc.getTeamBullets()>GameConstants.BULLET_TREE_COST) {//have enough bullets. assuming we haven't built already.
+            for (int i = 0; i < 4; i++) {
+                //only plant trees on a sub-grid
+                MapLocation p = rc.getLocation().add(dirList[i],GameConstants.GENERAL_SPAWN_OFFSET+GameConstants.BULLET_TREE_RADIUS+rc.getType().bodyRadius);
+                if(modGood(p.x,6,0.2f)&&modGood(p.y,6,0.2f)) {
+                    if (rc.canPlantTree(dirList[i])) {
+                        rc.plantTree(dirList[i]);
+                        break;
+                    }
+                }
+            }
+        }
+    }
+
+    public static boolean modGood(float number,float spacing, float fraction){
+        return (number%spacing)<spacing*fraction;
+    }
+
     static boolean noTreeInRange(int range) {
         for (TreeInfo tree : rc.senseNearbyTrees(-1, rc.getTeam())) {
             if (rc.getLocation().isWithinDistance(tree.getLocation(), range)) {
@@ -178,7 +199,7 @@ public class Gardener {
 
     static boolean noArchonInRange() {
         for (RobotInfo robot : rc.senseNearbyRobots(-1, rc.getTeam())) {
-            if (robot.type == RobotType.ARCHON && rc.getLocation().isWithinDistance(robot.getLocation(), 20)) {
+            if (robot.type == RobotType.ARCHON && rc.getLocation().isWithinDistance(robot.getLocation(), 3)) {
                 return false;
             }
         }
