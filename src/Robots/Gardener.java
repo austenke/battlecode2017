@@ -3,6 +3,7 @@ package Robots;
 import Helpers.HelperMethods;
 import battlecode.common.*;
 
+import java.util.ArrayList;
 import java.util.Random;
 
 /**
@@ -104,17 +105,24 @@ public class Gardener {
         boolean watering = false;
 
         TreeInfo[] trees = rc.senseNearbyTrees(-1, rc.getTeam());
+        ArrayList<TreeInfo> treesToWater = new ArrayList<>();
 
-        for (TreeInfo tree : trees) {
-            if (tree.health < 30) {
+        if (trees.length > 0) {
+            for (TreeInfo tree : trees) {
+                if (tree.health < 30) {
+                    treesToWater.add(tree);
+                }
+            }
+
+            if (treesToWater.size() > 0) {
+                TreeInfo tree = treesToWater.get(treesToWater.size() - 1);
                 watering = true;
                 if (rc.canWater(tree.getLocation())) {
                     for (int i = 0; i < 5; i++) {
                         rc.water(tree.getLocation());
                         Clock.yield();
                     }
-                }
-                else {
+                } else {
                     helpers.tryMove(rc.getLocation().directionTo(tree.getLocation()));
                     Clock.yield();
                 }
@@ -126,8 +134,8 @@ public class Gardener {
             Direction dir = helpers.randomDirection();
 
             if (rc.getTreeCount() < 10) {
-                if (rc.getTreeCount() < 3 || rc.getTeamBullets() >= 150) {
-                    if (rc.canPlantTree(dir) && noTreeInRange(8) && noArchonInRange()) {
+                if (rc.getTreeCount() < 4 || rc.getTeamBullets() >= 150) {
+                    if (rc.canPlantTree(dir) && noTreeInRange(5) && noArchonInRange()) {
                         rc.plantTree(dir);
                         return;
                     }
@@ -137,7 +145,7 @@ public class Gardener {
             }
             else {
                 if (trees.length > 0) {
-                    if (noTreeInRange(3)) {
+                    if (noTreeInRange(4)) {
                         int random = (int) Math.floor(Math.random() * (trees.length - 1));
                         helpers.tryMove(rc.getLocation().directionTo(trees[random].getLocation()));
                     }
@@ -164,7 +172,7 @@ public class Gardener {
 
     static boolean noArchonInRange() {
         for (RobotInfo robot : rc.senseNearbyRobots(-1, rc.getTeam())) {
-            if (robot.type == RobotType.ARCHON && rc.getLocation().isWithinDistance(robot.getLocation(), 30)) {
+            if (robot.type == RobotType.ARCHON && rc.getLocation().isWithinDistance(robot.getLocation(), 20)) {
                 return false;
             }
         }

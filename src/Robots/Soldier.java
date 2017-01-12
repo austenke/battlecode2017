@@ -36,8 +36,14 @@ public class Soldier {
                 if (enemyRobots.length > 0) {
                     // And we have enough bullets, and haven't attacked yet this turn...
                     if (rc.canFireSingleShot()) {
+                        RobotInfo lowestHealthRobot = enemyRobots[0];
+                        for (RobotInfo robot : enemyRobots) {
+                            if (lowestHealthRobot.health > robot.health) {
+                                lowestHealthRobot = robot;
+                            }
+                        }
                         // ...Then fire a bullet in the direction of the enemy.
-                        rc.fireSingleShot(rc.getLocation().directionTo(enemyRobots[0].location));
+                        rc.fireSingleShot(rc.getLocation().directionTo(lowestHealthRobot.getLocation()));
                     }
                     if (enemyRobots[0].getLocation().isWithinDistance(rc.getLocation(), rc.getType().sensorRadius - 2)) {
                         helpers.tryMove(rc.getLocation().directionTo(enemyRobots[0].getLocation()).opposite());
