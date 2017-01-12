@@ -146,28 +146,26 @@ public class Gardener {
         boolean watering = false;
 
         TreeInfo[] trees = rc.senseNearbyTrees(-1, rc.getTeam());
-        ArrayList<TreeInfo> treesToWater = new ArrayList<>();
-        TreeInfo worstTree = null;
+        TreeInfo treeToWater = null;
 
         if (trees.length > 0) {
             for (TreeInfo tree : trees) {
-                if (tree.getHealth() < GameConstants.BULLET_TREE_MAX_HEALTH-GameConstants.WATER_HEALTH_REGEN_RATE) {
-                    treesToWater.add(tree);
-                    if (worstTree == null || worstTree.getHealth() > tree.getHealth()) {
-                        worstTree = tree;
+                if (tree.getHealth() < GameConstants.BULLET_TREE_MAX_HEALTH - (GameConstants.WATER_HEALTH_REGEN_RATE * 2)) {
+                    if (treeToWater == null || treeToWater.getHealth() > tree.getHealth()) {
+                        treeToWater = tree;
                     }
                 }
             }
 
-            if (treesToWater.size() > 0) {
+            if (treeToWater != null) {
                 watering = true;
-                if (rc.canWater(worstTree.getLocation())) {
-                    while (worstTree.getHealth() < 45 && rc.canWater(worstTree.getLocation())) {
-                        rc.water(worstTree.getLocation());
+                if (rc.canWater(treeToWater.getLocation())) {
+                    while (treeToWater.getHealth() < 45 && rc.canWater(treeToWater.getLocation())) {
+                        rc.water(treeToWater.getLocation());
                         Clock.yield();
                     }
                 } else {
-                    helpers.tryMove(rc.getLocation().directionTo(worstTree.getLocation()));
+                    helpers.tryMove(rc.getLocation().directionTo(treeToWater.getLocation()));
                     Clock.yield();
                 }
             }
