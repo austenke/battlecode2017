@@ -33,7 +33,7 @@ public class HelperMethods {
      * @return true if a move was performed
      * @throws GameActionException
      */
-    public static boolean tryMove(Direction dir) throws GameActionException {
+    public static Direction tryMove(Direction dir) throws GameActionException {
         // Find nearby bullets
         BulletInfo[] bullets = rc.senseNearbyBullets();
 
@@ -67,9 +67,9 @@ public class HelperMethods {
 
                 if (secondClosestBullet.getLocation().distanceTo(leftOfClosestBullet) >
                         secondClosestBullet.getLocation().distanceTo(rightOfClosestBullet)) {
-                    return tryMove(closestBulletDirection.rotateLeftDegrees(90), 10, 18);
+                    return tryMove(closestBulletDirection.rotateLeftDegrees(90), 20, 9);
                 } else {
-                    return tryMove(closestBulletDirection.rotateRightDegrees(90), 10, 18);
+                    return tryMove(closestBulletDirection.rotateRightDegrees(90), 20, 9);
                 }
             } else if (bulletsWillCollide.size() == 1) {
                 BulletInfo secondClosest = bullets[bullets.length - 1];
@@ -83,22 +83,23 @@ public class HelperMethods {
 
                 if (secondClosest.getLocation().distanceTo(leftOfClosestBullet) >
                         secondClosest.getLocation().distanceTo(rightOfClosestBullet)) {
-                    return tryMove(closestBulletDirection.rotateLeftDegrees(90), 10, 18);
+                    return tryMove(closestBulletDirection.rotateLeftDegrees(90), 20, 9);
                 } else {
-                    return tryMove(closestBulletDirection.rotateRightDegrees(90), 10, 18);
+                    return tryMove(closestBulletDirection.rotateRightDegrees(90), 20, 9);
                 }
             }
             else {
                 for (BulletInfo bullet : bullets) {
                     if (willCollideWithMe(rc.getLocation().add(dir), bullet)) {
-                        return false;
+                        // Don't move, but there's nothing wrong with the location so return it
+                        return dir;
                     }
                 }
-                return tryMove(dir, 10, 18);
+                return tryMove(dir, 20, 9);
             }
         }
         else {
-            return tryMove(dir, 10, 18);
+            return tryMove(dir, 20, 9);
         }
     }
 
@@ -111,12 +112,12 @@ public class HelperMethods {
      * @return true if a move was performed
      * @throws GameActionException
      */
-    public static boolean tryMove(Direction dir, float degreeOffset, int checksPerSide) throws GameActionException {
+    public static Direction tryMove(Direction dir, float degreeOffset, int checksPerSide) throws GameActionException {
 
         // First, try intended direction
         if (rc.canMove(dir)) {
             rc.move(dir);
-            return true;
+            return dir;
         }
 
         // Now try a bunch of similar angles
@@ -126,20 +127,22 @@ public class HelperMethods {
         while(currentCheck<=checksPerSide) {
             // Try the offset of the left side
             if(rc.canMove(dir.rotateLeftDegrees(degreeOffset*currentCheck))) {
-                rc.move(dir.rotateLeftDegrees(degreeOffset*currentCheck));
-                return true;
+                Direction newDir = dir.rotateLeftDegrees(degreeOffset*currentCheck);
+                rc.move(newDir);
+                return newDir;
             }
             // Try the offset on the right side
             if(rc.canMove(dir.rotateRightDegrees(degreeOffset*currentCheck))) {
-                rc.move(dir.rotateRightDegrees(degreeOffset*currentCheck));
-                return true;
+                Direction newDir = dir.rotateRightDegrees(degreeOffset*currentCheck);
+                rc.move(newDir);
+                return newDir;
             }
             // No move performed, try slightly further
             currentCheck++;
         }
 
         // A move never happened, so return false.
-        return false;
+        return null;
     }
 
     //public static Direction findOpenLocation(MapLocation loc) {
@@ -201,11 +204,16 @@ public class HelperMethods {
             }
         }
 
-        if (!rc.canMove(togo)) {
-            togo = randomDirection();
+        Direction tryMoveResult = tryMove(togo);
+
+        // Only receive null if tryMove cannot go anywhere, so try going opposite direction
+        if (tryMoveResult == null) {
+            togo = togo.opposite();
+        }
+        else {
+            togo = tryMoveResult;
         }
 
-        tryMove(togo);
         return togo;
     }
 }

@@ -18,8 +18,6 @@ public class Archon {
     }
 
     public static void run() throws GameActionException {
-        System.out.println("I'm an archon!");
-
         // The code you want your robot to perform every round should be in this loop
         while (true) {
 

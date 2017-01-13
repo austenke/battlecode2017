@@ -53,12 +53,12 @@ public class Gardener {
                 if (!tryToWater()) {
                     if (buildOrPlant == 0) {
                         numSoldiers = builderGardener(numSoldiers);
-                        minDist = 20;
-                        maxDist = 30;
+                        minDist = 25;
+                        maxDist = 35;
                     } else if (buildOrPlant == 1) {
                         planterGardener();
                         minDist = 1;
-                        maxDist = 19;
+                        maxDist = 20;
                     }
 
                     if (!rc.hasMoved()) {
@@ -97,9 +97,6 @@ public class Gardener {
     }
 
     static void planterGardener() throws GameActionException {
-
-        TreeInfo[] trees = rc.senseNearbyTrees(-1, rc.getTeam());
-
         if (rc.getTreeCount() < 20) {
             tryToPlant();
         }
@@ -121,6 +118,8 @@ public class Gardener {
             }
 
             if (treeToWater != null) {
+                // Not updating goingDir because that would interfere with watering mechanics.
+                // Instead handling movement by itself
                 if (rc.canWater(treeToWater.getLocation())) {
                     int turnsToWater = (int) Math.ceil((GameConstants.BULLET_TREE_MAX_HEALTH - treeToWater.getHealth())
                             / GameConstants.WATER_HEALTH_REGEN_RATE);
@@ -147,7 +146,7 @@ public class Gardener {
     public static void tryToPlant() throws GameActionException {
         Direction[] dirList = RobotPlayer.getDirList();
         if(rc.getTeamBullets()>GameConstants.BULLET_TREE_COST && rc.getLocation().distanceTo(myArchon) > 2) {//have enough bullets. assuming we haven't built already.
-            for (int i = 0; i < 4; i++) {
+            for (int i = 0; i < dirList.length; i++) {
                 //only plant trees on a sub-grid
                 MapLocation p = rc.getLocation().add(dirList[i],GameConstants.GENERAL_SPAWN_OFFSET+GameConstants.BULLET_TREE_RADIUS+rc.getType().bodyRadius);
                 if(modGood(p.x,6,0.2f)&&modGood(p.y,6,0.2f)) {
