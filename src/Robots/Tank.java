@@ -51,7 +51,7 @@ public class Tank {
                             rc.fireTriadShot(rc.getLocation().directionTo(nlocs[nlocs.length - 1].getLocation()));
                         }
                         if (rc.canFireSingleShot()){
-                            rc.fireTriadShot(rc.getLocation().directionTo(nlocs[nlocs.length - 1].getLocation()));
+                            rc.fireSingleShot(rc.getLocation().directionTo(nlocs[nlocs.length - 1].getLocation()));
                         }
                          if (nlocs[0].getLocation().isWithinDistance(rc.getLocation(), rc.getType().sensorRadius - 2)) {
                             helpers.tryMove(rc.getLocation().directionTo(nlocs[0].getLocation()).opposite());
