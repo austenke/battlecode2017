@@ -2,16 +2,19 @@ package Helpers;
 
 import battlecode.common.*;
 
-import java.lang.reflect.Array;
 import java.util.ArrayList;
+import java.util.Map;
+import java.util.Random;
 
 /**
  * Class for common helper methods
  */
 public class HelperMethods {
     static RobotController rc;
+    static Random rand;
 
     public HelperMethods(RobotController rc) {
+        rand = new Random();
         this.rc = rc;
     }
 
@@ -20,7 +23,7 @@ public class HelperMethods {
      * @return a random Direction
      */
     public static Direction randomDirection() {
-        return new Direction((float)Math.random() * 2 * (float)Math.PI);
+        return new Direction((float)HelperMethods.randomNum() * 2 * (float)Math.PI);
     }
 
     /**
@@ -64,9 +67,9 @@ public class HelperMethods {
 
                 if (secondClosestBullet.getLocation().distanceTo(leftOfClosestBullet) >
                         secondClosestBullet.getLocation().distanceTo(rightOfClosestBullet)) {
-                    return tryMove(closestBulletDirection.rotateLeftDegrees(90), 20, 3);
+                    return tryMove(closestBulletDirection.rotateLeftDegrees(90), 10, 18);
                 } else {
-                    return tryMove(closestBulletDirection.rotateRightDegrees(90), 20, 3);
+                    return tryMove(closestBulletDirection.rotateRightDegrees(90), 10, 18);
                 }
             } else if (bulletsWillCollide.size() == 1) {
                 BulletInfo secondClosest = bullets[bullets.length - 1];
@@ -80,9 +83,9 @@ public class HelperMethods {
 
                 if (secondClosest.getLocation().distanceTo(leftOfClosestBullet) >
                         secondClosest.getLocation().distanceTo(rightOfClosestBullet)) {
-                    return tryMove(closestBulletDirection.rotateLeftDegrees(90), 20, 3);
+                    return tryMove(closestBulletDirection.rotateLeftDegrees(90), 10, 18);
                 } else {
-                    return tryMove(closestBulletDirection.rotateRightDegrees(90), 20, 3);
+                    return tryMove(closestBulletDirection.rotateRightDegrees(90), 10, 18);
                 }
             }
             else {
@@ -91,11 +94,11 @@ public class HelperMethods {
                         return false;
                     }
                 }
-                return tryMove(dir, 20, 3);
+                return tryMove(dir, 10, 18);
             }
         }
         else {
-            return tryMove(dir, 20, 3);
+            return tryMove(dir, 10, 18);
         }
     }
 
@@ -174,5 +177,35 @@ public class HelperMethods {
         float perpendicularDist = (float)Math.abs(distToRobot * Math.sin(theta)); // soh cah toa :)
 
         return (perpendicularDist <= rc.getType().bodyRadius);
+    }
+
+    public static float randomNum() {
+        return rand.nextFloat();
+    }
+
+    // Keeps robot in range and returns the direction it moved in
+    public static Direction stayInArchonRange(Direction goingDir, MapLocation myArchon, int minDist, int maxDist) throws GameActionException {
+        Direction togo = goingDir;
+        float archonDist = rc.getLocation().distanceTo(myArchon);
+        float toRotate = (float) (randomNum() * 140) - 70;
+        if (archonDist >= maxDist) {
+            if (!(rc.getLocation().add(goingDir).distanceTo(myArchon) < archonDist)) {
+                Direction archonDir = rc.getLocation().directionTo(myArchon);
+                togo = archonDir.rotateLeftDegrees(toRotate);
+            }
+        }
+        else if (archonDist <= minDist) {
+            if (!(rc.getLocation().add(goingDir).distanceTo(myArchon) >= archonDist)) {
+                Direction archonDir = rc.getLocation().directionTo(myArchon).opposite();
+                togo = archonDir.rotateLeftDegrees(toRotate);
+            }
+        }
+
+        if (!rc.canMove(togo)) {
+            togo = randomDirection();
+        }
+
+        tryMove(togo);
+        return togo;
     }
 }
