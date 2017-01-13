@@ -51,7 +51,7 @@ public class Gardener {
 
             // Try/catch blocks stop unhandled exceptions, which cause your robot to explode
             try {
-                if (!rc.getLocation().isWithinDistance(myArchon, 25)) {
+                if (!rc.getLocation().isWithinDistance(myArchon, 30)) {
                     float toRotate = (float) Math.random() * 70;
                     Direction archonDir = rc.getLocation().directionTo(myArchon);
                     if (Math.random() > .5) {
@@ -89,25 +89,35 @@ public class Gardener {
         boolean watering = false;
 
         TreeInfo[] trees = rc.senseNearbyTrees(-1, rc.getTeam());
+        TreeInfo treeToWater = null;
 
-        for (TreeInfo tree : trees) {
-            if (tree.health < 30) {
-                watering = true;
-                if (rc.canWater(tree.getLocation())) {
-                    for (int i = 0; i < 5; i++) {
-                        rc.water(tree.getLocation());
-                        Clock.yield();
+        if (trees.length > 0) {
+            for (TreeInfo tree : trees) {
+                if (tree.getHealth() < GameConstants.BULLET_TREE_MAX_HEALTH - (GameConstants.WATER_HEALTH_REGEN_RATE * 2)) {
+                    if (treeToWater == null || treeToWater.getHealth() > tree.getHealth()) {
+                        treeToWater = tree;
                     }
                 }
-                else {
-                    helpers.tryMove(rc.getLocation().directionTo(tree.getLocation()));
+            }
+
+            if (treeToWater != null) {
+                watering = true;
+                if (rc.canWater(treeToWater.getLocation())) {
+                    int turnsToWater = (int) Math.floor((GameConstants.BULLET_TREE_MAX_HEALTH - treeToWater.getHealth())
+                            / GameConstants.WATER_HEALTH_REGEN_RATE);
+                    for (int i = 0; i < turnsToWater; i++) {
+                        rc.water(treeToWater.getLocation());
+                        Clock.yield();
+                    }
+                } else {
+                    helpers.tryMove(rc.getLocation().directionTo(treeToWater.getLocation()));
                     Clock.yield();
                 }
             }
         }
 
         if (!watering) {
-            if (!rc.getLocation().isWithinDistance(myArchon, 15)) {
+            if (!rc.getLocation().isWithinDistance(myArchon, 20)) {
                 // Generate a random direction
                 Direction dir = helpers.randomDirection();
 
@@ -124,14 +134,14 @@ public class Gardener {
             }
             else {
                 float toRotate = (float) Math.random() * 70;
-                Direction archonDir = rc.getLocation().directionTo(myArchon).opposite();
+                Direction oppArchonDir = rc.getLocation().directionTo(myArchon).opposite();
                 if (Math.random() > .5) {
-                    archonDir = archonDir.rotateLeftDegrees(toRotate);
+                    oppArchonDir = oppArchonDir.rotateLeftDegrees(toRotate);
                 }
                 else {
-                    archonDir = archonDir.rotateRightDegrees(toRotate);
+                    oppArchonDir = oppArchonDir.rotateRightDegrees(toRotate);
                 }
-                goingDir = archonDir;
+                goingDir = oppArchonDir;
 
                 if(!rc.canMove(goingDir)){
                     goingDir = HelperMethods.randomDirection();
@@ -174,25 +184,40 @@ public class Gardener {
         }
 
         if (!watering) {
-            if (rc.getTreeCount() < 15) {
-                tryToPlant();
+            if (!rc.getLocation().isWithinDistance(myArchon, 20)) {
+                float toRotate = (float) Math.random() * 70;
+                Direction archonDir = rc.getLocation().directionTo(myArchon);
+                if (Math.random() > .5) {
+                    archonDir = archonDir.rotateLeftDegrees(toRotate);
+                }
+                else {
+                    archonDir = archonDir.rotateRightDegrees(toRotate);
+                }
+                goingDir = archonDir;
+
                 if(!rc.canMove(goingDir)){
                     goingDir = HelperMethods.randomDirection();
                 }
                 HelperMethods.tryMove(goingDir);
             }
             else {
-                if (trees.length > 0) {
-                    if (noTreeInRange(4)) {
-                        int random = (int) Math.floor(Math.random() * (trees.length - 1));
-                        helpers.tryMove(rc.getLocation().directionTo(trees[random].getLocation()));
+                if (rc.getTreeCount() < 15) {
+                    tryToPlant();
+                    if (!rc.canMove(goingDir)) {
+                        goingDir = HelperMethods.randomDirection();
                     }
-                    else {
+                    HelperMethods.tryMove(goingDir);
+                } else {
+                    if (trees.length > 0) {
+                        if (noTreeInRange(4)) {
+                            int random = (int) Math.floor(Math.random() * (trees.length - 1));
+                            helpers.tryMove(rc.getLocation().directionTo(trees[random].getLocation()));
+                        } else {
+                            helpers.tryMove(HelperMethods.randomDirection());
+                        }
+                    } else {
                         helpers.tryMove(HelperMethods.randomDirection());
                     }
-                }
-                else {
-                    helpers.tryMove(HelperMethods.randomDirection());
                 }
             }
         }
