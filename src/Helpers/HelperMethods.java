@@ -3,7 +3,6 @@ package Helpers;
 import battlecode.common.*;
 
 import java.util.ArrayList;
-import java.util.Map;
 import java.util.Random;
 
 /**
@@ -79,10 +78,17 @@ public class HelperMethods {
             else {
                 for (BulletInfo bullet : bullets) {
                     if (willCollideWithMe(rc.getLocation().add(dir), bullet)) {
-                        // Don't move, but there's nothing wrong with the location so return it
-                        return dir;
+                        if (willCollideWithMe(rc.getLocation().add(dir.opposite()), bullet)) {
+                            // Don't move, but there's nothing wrong with the direction so return it
+                            return dir;
+                        }
+                        else {
+                            return tryMove(dir.opposite());
+                        }
                     }
                 }
+                // After looping through each bullet, nothing will collide with me if I move forwards
+                // TODO: the second tryMove function could move you into the path of a bullet
                 return tryMove(dir, degreeOffset, checksPerSide);
             }
         }
@@ -219,7 +225,6 @@ public class HelperMethods {
 
         // Only receive null if tryMove cannot go anywhere, so try going opposite direction
         if (tryMoveResult == null) {
-            System.out.println("Received null");
             togo = togo.opposite();
         }
         else {
