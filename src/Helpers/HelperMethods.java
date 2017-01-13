@@ -26,21 +26,9 @@ public class HelperMethods {
         return new Direction((float)HelperMethods.randomNum() * 2 * (float)Math.PI);
     }
 
-    /**
-     * Attempts to move in a given direction, while avoiding small obstacles directly in the path.
-     *
-     * @param dir The intended direction of movement
-     * @return true if a move was performed
-     * @throws GameActionException
-     */
-    public static Direction tryMove(Direction dir) throws GameActionException {
+    public static Direction dodgeBullets(Direction dir, int degreeOffset, int checksPerSide) throws GameActionException {
         // Find nearby bullets
         BulletInfo[] bullets = rc.senseNearbyBullets();
-
-        ArrayList<Float> floats = new ArrayList<Float>();
-        for (BulletInfo bullet : bullets) {
-            floats.add(rc.getLocation().distanceTo(bullet.getLocation()));
-        }
 
         if (bullets.length > 0) {
             // List for bullets on collision course with robot
@@ -67,9 +55,9 @@ public class HelperMethods {
 
                 if (secondClosestBullet.getLocation().distanceTo(leftOfClosestBullet) >
                         secondClosestBullet.getLocation().distanceTo(rightOfClosestBullet)) {
-                    return tryMove(closestBulletDirection.rotateLeftDegrees(90), 20, 9);
+                    return tryMove(closestBulletDirection.rotateLeftDegrees(90), degreeOffset, checksPerSide);
                 } else {
-                    return tryMove(closestBulletDirection.rotateRightDegrees(90), 20, 9);
+                    return tryMove(closestBulletDirection.rotateRightDegrees(90), degreeOffset, checksPerSide);
                 }
             } else if (bulletsWillCollide.size() == 1) {
                 BulletInfo secondClosest = bullets[bullets.length - 1];
@@ -83,9 +71,9 @@ public class HelperMethods {
 
                 if (secondClosest.getLocation().distanceTo(leftOfClosestBullet) >
                         secondClosest.getLocation().distanceTo(rightOfClosestBullet)) {
-                    return tryMove(closestBulletDirection.rotateLeftDegrees(90), 20, 9);
+                    return tryMove(closestBulletDirection.rotateLeftDegrees(90), degreeOffset, checksPerSide);
                 } else {
-                    return tryMove(closestBulletDirection.rotateRightDegrees(90), 20, 9);
+                    return tryMove(closestBulletDirection.rotateRightDegrees(90), degreeOffset, checksPerSide);
                 }
             }
             else {
@@ -95,11 +83,31 @@ public class HelperMethods {
                         return dir;
                     }
                 }
-                return tryMove(dir, 20, 9);
+                return tryMove(dir, degreeOffset, checksPerSide);
             }
         }
         else {
-            return tryMove(dir, 20, 9);
+            return null;
+        }
+    }
+
+    /**
+     * Attempts to move in a given direction, while avoiding small obstacles directly in the path.
+     *
+     * @param dir The intended direction of movement
+     * @return true if a move was performed
+     * @throws GameActionException
+     */
+    public static Direction tryMove(Direction dir) throws GameActionException {
+        int degreeOffset = 20;
+        int checksPerSide = 10;
+
+        Direction dodge = dodgeBullets(dir, degreeOffset, checksPerSide);
+        if (dodge == null) {
+            return tryMove(dir, degreeOffset, checksPerSide);
+        }
+        else {
+            return dodge;
         }
     }
 
@@ -187,19 +195,22 @@ public class HelperMethods {
     }
 
     // Keeps robot in range and returns the direction it moved in
-    public static Direction stayInArchonRange(Direction goingDir, MapLocation myArchon, int minDist, int maxDist) throws GameActionException {
+    public static Direction stayInLocationRange(Direction goingDir, MapLocation myLoc, int minDist, int maxDist) throws GameActionException {
         Direction togo = goingDir;
-        float archonDist = rc.getLocation().distanceTo(myArchon);
+        float archonDist = rc.getLocation().distanceTo(myLoc);
+        // Calculate random variation for direction to move in
         float toRotate = (float) (randomNum() * 140) - 70;
+        // Check if robot has gone too far from archon
         if (archonDist >= maxDist) {
-            if (!(rc.getLocation().add(goingDir).distanceTo(myArchon) < archonDist)) {
-                Direction archonDir = rc.getLocation().directionTo(myArchon);
+            if (!(rc.getLocation().add(goingDir).distanceTo(myLoc) < archonDist)) {
+                Direction archonDir = rc.getLocation().directionTo(myLoc);
                 togo = archonDir.rotateLeftDegrees(toRotate);
             }
         }
+        // Check if robot has come too close to archon
         else if (archonDist <= minDist) {
-            if (!(rc.getLocation().add(goingDir).distanceTo(myArchon) >= archonDist)) {
-                Direction archonDir = rc.getLocation().directionTo(myArchon).opposite();
+            if (!(rc.getLocation().add(goingDir).distanceTo(myLoc) >= archonDist)) {
+                Direction archonDir = rc.getLocation().directionTo(myLoc).opposite();
                 togo = archonDir.rotateLeftDegrees(toRotate);
             }
         }
@@ -208,6 +219,7 @@ public class HelperMethods {
 
         // Only receive null if tryMove cannot go anywhere, so try going opposite direction
         if (tryMoveResult == null) {
+            System.out.println("Received null");
             togo = togo.opposite();
         }
         else {
