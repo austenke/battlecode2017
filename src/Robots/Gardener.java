@@ -160,7 +160,9 @@ public class Gardener {
             if (treeToWater != null) {
                 watering = true;
                 if (rc.canWater(treeToWater.getLocation())) {
-                    while (treeToWater.getHealth() < 45 && rc.canWater(treeToWater.getLocation())) {
+                    int turnsToWater = (int) Math.floor((GameConstants.BULLET_TREE_MAX_HEALTH - treeToWater.getHealth())
+                            / GameConstants.WATER_HEALTH_REGEN_RATE);
+                    for (int i = 0; i < turnsToWater; i++) {
                         rc.water(treeToWater.getLocation());
                         Clock.yield();
                     }
