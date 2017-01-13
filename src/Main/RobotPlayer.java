@@ -40,6 +40,9 @@ public strictfp class RobotPlayer {
             case TANK:
                 new Tank(rc, helpers).run();
                 break;
+            case SCOUT:
+                new Scout(rc, helpers).run();
+                break;
         }
 	}
 
