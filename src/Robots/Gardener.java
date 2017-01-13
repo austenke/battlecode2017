@@ -45,6 +45,11 @@ public class Gardener {
 
         // The code you want your robot to perform every round should be in this loop
         while (true) {
+            // Add indicator dot for middle of map
+            MapLocation foo = new MapLocation(300, 300);
+            rc.setIndicatorLine(foo, foo.add(HelperMethods.randomDirection()),66,244,241);
+            rc.setIndicatorDot(foo,66,244,241);
+            //System.out.println(foo);
 
             // Try/catch blocks stop unhandled exceptions, which cause your robot to explode
             try {
@@ -53,25 +58,27 @@ public class Gardener {
                 if (!tryToWater()) {
                     if (buildOrPlant == 0) {
                         numSoldiers = builderGardener(numSoldiers);
-                        minDist = 25;
-                        maxDist = 35;
+                        minDist = 22;
+                        maxDist = 30;
                     } else if (buildOrPlant == 1) {
-                        planterGardener();
+                        tryToPlant();
                         minDist = 1;
                         maxDist = 20;
                     }
 
                     if (!rc.hasMoved()) {
-                        goingDir = HelperMethods.stayInArchonRange(goingDir, myArchon, minDist, maxDist);
+                        goingDir = HelperMethods.stayInLocationRange(goingDir, myArchon, minDist, maxDist);
                     }
                 }
+
+                // Add indicator line for current direction
+                rc.setIndicatorLine(rc.getLocation(), rc.getLocation().add(goingDir).add(goingDir).add(goingDir),66,244,241);
 
                 // Clock.yield() makes the robot wait until the next turn, then it will perform this loop again
                 Clock.yield();
 
             } catch (Exception e) {
                 System.out.println("Gardener Exception");
-                System.out.println("Has moved error: " + rc.hasMoved());
                 e.printStackTrace();
             }
         }
@@ -96,12 +103,6 @@ public class Gardener {
         return soldierCount;
     }
 
-    static void planterGardener() throws GameActionException {
-        if (rc.getTreeCount() < 20) {
-            tryToPlant();
-        }
-    }
-
     public static boolean tryToWater() throws GameActionException {
         TreeInfo[] trees = rc.senseNearbyTrees(-1, rc.getTeam());
 
@@ -118,24 +119,37 @@ public class Gardener {
             }
 
             if (treeToWater != null) {
+                rc.setIndicatorDot(treeToWater.getLocation(),66,244,241);
+                // Lazy solution to occasional null goingDir values
+                Direction prevGoingDirection = goingDir;
                 // Not updating goingDir because that would interfere with watering mechanics.
                 // Instead handling movement by itself
                 if (rc.canWater(treeToWater.getLocation())) {
                     int turnsToWater = (int) Math.ceil((GameConstants.BULLET_TREE_MAX_HEALTH - treeToWater.getHealth())
                             / GameConstants.WATER_HEALTH_REGEN_RATE);
+                    // After calculating how long it will take to fully regenerate tree, loop for that amount of
+                    // times. There was a bug where water sometimes failed so also check if watering is possible for
+                    // each loop and if not move towards tree again (making sure to increase how many turns are
+                    // needed to water by 1).
                     for (int i = 0; i < turnsToWater; i++) {
                         if (rc.canWater(treeToWater.getLocation())) {
                             rc.water(treeToWater.getLocation());
                             Clock.yield();
                         }
                         else {
-                            helpers.tryMove(rc.getLocation().directionTo(treeToWater.getLocation()));
+                            goingDir = helpers.tryMove(rc.getLocation().directionTo(treeToWater.getLocation()));
+                            turnsToWater++;
                             Clock.yield();
                         }
                     }
                 } else {
-                    helpers.tryMove(rc.getLocation().directionTo(treeToWater.getLocation()));
+                    goingDir = helpers.tryMove(rc.getLocation().directionTo(treeToWater.getLocation()));
                 }
+
+                if (goingDir == null) {
+                    goingDir = prevGoingDirection.opposite();
+                }
+
                 // Return true for watering
                 return true;
             }
@@ -155,6 +169,7 @@ public class Gardener {
                         break;
                     }
                 }
+                rc.setIndicatorDot(p, 66, 244, 80);
             }
         }
     }
@@ -173,5 +188,3 @@ public class Gardener {
         return true;
     }
 }
-
-
