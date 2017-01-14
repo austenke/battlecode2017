@@ -34,14 +34,7 @@ public class Gardener {
         rc.broadcast(2,gardenerCount + 1);
 
         MapLocation[] archons = rc.getInitialArchonLocations(rc.getTeam());
-        myArchon = archons[0];
-        if (archons.length > 1) {
-            for (MapLocation archonLoc : archons) {
-                if (rc.getLocation().distanceTo(archonLoc) < rc.getLocation().distanceTo(myArchon)) {
-                    myArchon = archonLoc;
-                }
-            }
-        }
+        myArchon = archons[archons.length - 1];
 
         // The code you want your robot to perform every round should be in this loop
         while (true) {
@@ -163,7 +156,7 @@ public class Gardener {
             for (int i = 0; i < dirList.length; i++) {
                 //only plant trees on a sub-grid
                 MapLocation p = rc.getLocation().add(dirList[i],GameConstants.GENERAL_SPAWN_OFFSET+GameConstants.BULLET_TREE_RADIUS+rc.getType().bodyRadius);
-                if(modGood(p.x,6,0.2f)&&modGood(p.y,6,0.2f)) {
+                if(modGood(p.x,6,0.3f)&&modGood(p.y,6,0.3f)) {
                     if (rc.canPlantTree(dirList[i])) {
                         rc.plantTree(dirList[i]);
                         break;

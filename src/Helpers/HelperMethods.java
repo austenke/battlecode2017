@@ -78,13 +78,7 @@ public class HelperMethods {
             else {
                 for (BulletInfo bullet : bullets) {
                     if (willCollideWithMe(rc.getLocation().add(dir), bullet)) {
-                        if (willCollideWithMe(rc.getLocation().add(dir.opposite()), bullet)) {
-                            // Don't move, but there's nothing wrong with the direction so return it
-                            return dir;
-                        }
-                        else {
-                            return tryMove(dir.opposite());
-                        }
+                        return dir;
                     }
                 }
                 // After looping through each bullet, nothing will collide with me if I move forwards
