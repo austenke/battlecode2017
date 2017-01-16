@@ -26,14 +26,15 @@ public class Archon {
 
                 // Generate a random direction
                 Direction dir = randomDirection();
-                if (rc.getRoundNum() <= 500) {
-                    if (rc.canHireGardener(dir) && rc.getTeamBullets() >= 100) {
+                while(!rc.canHireGardener(dir) && rc.getTeamBullets() >= 100){
+                    dir = randomDirection();
+                }
+                if (rc.getRobotCount() < 10) {
+                    if (rc.canHireGardener(dir) && (rc.getRobotCount() == 1 || rc.getRobotCount() == 2 || rc.getRobotCount() == 4 || rc.getRobotCount() == 6 || rc.getRobotCount() == 8)) {
                         rc.hireGardener(dir);
                     }
-                //} else if (rc.getTeamBullets() >= 800) {
-                //    rc.donate(400);
-                } else if (rc.canHireGardener(dir) && rc.getTeamBullets() >= 400) {
-                    rc.hireGardener(dir);
+                }else if (rc.getRobotCount() % 5 == 4 && rc.canHireGardener(dir)){
+                        rc.hireGardener(dir);
                 }
 
                 //tryMove(randomDirection());

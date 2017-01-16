@@ -53,13 +53,7 @@ public class Soldier {
                     }
                 }
                 else {
-                    //follow tank
-                    if(tankLoc != null && myLocation.distanceTo(tankLoc) >= 20){
-                        helpers.tryMove(myLocation.directionTo(tankLoc));
-                    }
-                    else{
-                        helpers.tryMove(helpers.randomDirection());
-                    }
+                    helpers.tryMove(HelperMethods.randomDirection());
                 }
 
                 // Clock.yield() makes the robot wait until the next turn, then it will perform this loop again

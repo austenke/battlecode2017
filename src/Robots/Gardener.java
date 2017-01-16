@@ -4,6 +4,8 @@ import Helpers.HelperMethods;
 import Main.RobotPlayer;
 import battlecode.common.*;
 
+import java.awt.*;
+
 /**
  * Class for gardener robot.
  */
@@ -22,8 +24,7 @@ public class Gardener {
         goingDir = HelperMethods.randomDirection();
         int gardenerCount = rc.readBroadcast(2);
         int buildOrPlant = -1;
-        int numSoldiers = 0;
-        if(gardenerCount > 2 && ((gardenerCount + 1) % 2) == 0) {
+        if((gardenerCount + 1) % 2 == 0) {
             buildOrPlant = 0;
             //System.out.println("I'm a builder gardener!");
         }
@@ -50,7 +51,7 @@ public class Gardener {
                 int maxDist = -1;
                 if (!tryToWater()) {
                     if (buildOrPlant == 0) {
-                        numSoldiers = builderGardener(numSoldiers);
+                        builderGardener();
                         minDist = 22;
                         maxDist = 30;
                     } else if (buildOrPlant == 1) {
@@ -77,23 +78,31 @@ public class Gardener {
         }
     }
 
-    static int builderGardener(int soldiers) throws GameActionException {
-        int soldierCount = soldiers;
+    static void builderGardener() throws GameActionException {
 
         if (!rc.getLocation().isWithinDistance(myArchon, 20)) {
             // Generate a random direction
             Direction dir = helpers.randomDirection();
+            while(!rc.canBuildRobot(RobotType.TANK, dir) && rc.getTeamBullets() >= 100){
+                dir = helpers.randomDirection();
+            }
+            System.out.println("dir");
             // Randomly attempt to build a soldier or lumberjack in this direction
-            if (rc.getRobotCount() < 15 || rc.getTeamBullets() >= 300) {
-                if (rc.canBuildRobot(RobotType.SOLDIER, dir) && soldierCount % 5 > 0) {
+            if (rc.getRobotCount() < 10) {
+                if (rc.canBuildRobot(RobotType.SOLDIER, dir) && (rc.getRobotCount() == 3 || rc.getRobotCount() == 5 || rc.getRobotCount() == 7 || rc.getRobotCount() == 9)) {
                     rc.buildRobot(RobotType.SOLDIER, dir);
-                } else if (rc.canBuildRobot(RobotType.TANK, dir)) {
-                    rc.buildRobot(RobotType.TANK, dir);
+                    System.out.println("bot");
                 }
-                soldierCount++;
+            }else if(rc.getRobotCount() < 15 && rc.canBuildRobot(RobotType.SCOUT, dir)){
+                    rc.buildRobot(RobotType.SCOUT, dir);
+            }else if(rc.getRobotCount() % 5 == 0 && rc.canBuildRobot(RobotType.TANK, dir)){
+                rc.buildRobot(RobotType.TANK, dir);
+            }else if(rc.getRobotCount() % 5 < 3 && rc.canBuildRobot(RobotType.SOLDIER, dir)){
+                rc.buildRobot(RobotType.SOLDIER, dir);
+            }else if(rc.getRobotCount() % 5 == 3 && rc.canBuildRobot(RobotType.SCOUT, dir)){
+                rc.buildRobot(RobotType.SCOUT, dir);
             }
         }
-        return soldierCount;
     }
 
     public static boolean tryToWater() throws GameActionException {
