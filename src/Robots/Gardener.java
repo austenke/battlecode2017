@@ -50,20 +50,19 @@ public class Gardener {
                 if (!tryToWater()) {
                     if (buildOrPlant == 0) {
                         builderGardener();
-                        minDist = 22;
-                        maxDist = 30;
+                        minDist = 15;
+                        maxDist = 20;
                     } else if (buildOrPlant == 1) {
                         tryToPlant();
                         if (rc.getTreeCount() < 5) {
-                            minDist = 1;
+                            minDist = 0;
                             maxDist = 10;
                         }
                         else {
-                            minDist = 1;
+                            minDist = 0;
                             maxDist = 20;
                         }
                     }
-
                     move.stayInLocationRange(myArchon, minDist, maxDist);
                 }
 
@@ -135,15 +134,12 @@ public class Gardener {
                 // each loop and if not move towards tree again (making sure to increase how many turns are
                 // needed to water by 1).
                 for (int i = 0; i < turnsToWater; i++) {
+                    // Ensure gardener is next to tree and dodging bullets
+                    move.moveToLoc(treeToWater.getLocation());
                     if (rc.canWater(treeToWater.getLocation())) {
                         rc.water(treeToWater.getLocation());
-                        Clock.yield();
                     }
-                    else {
-                        move.moveToLoc(treeToWater.getLocation());
-                        turnsToWater++;
-                        Clock.yield();
-                    }
+                    Clock.yield();
                 }
             } else {
                 move.moveToLoc(treeToWater.getLocation());
