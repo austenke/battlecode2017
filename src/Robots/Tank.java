@@ -1,6 +1,7 @@
 package Robots;
 
 import Helpers.HelperMethods;
+import Helpers.Movement;
 import battlecode.common.*;
 import org.apache.commons.lang3.ObjectUtils;
 import scala.tools.nsc.backend.jvm.analysis.Null;
@@ -8,10 +9,12 @@ import scala.tools.nsc.backend.jvm.analysis.Null;
 public class Tank {
     static RobotController rc;
     static HelperMethods helpers;
+    static Movement move;
 
     public Tank(RobotController rc, HelperMethods helpers) {
         this.rc = rc;
         this.helpers = helpers;
+        this.move = new Movement(rc);
     }
 
     public static void run() throws GameActionException{
@@ -38,13 +41,13 @@ public class Tank {
                             }
                             Direction enemyDir = rc.getLocation().directionTo(floc);
                             if(enemyDir != null){
-                                helpers.tryMove(enemyDir);
+                                move.moveToLoc(floc);
                             }
                             else{
-                                helpers.tryMove(helpers.randomDirection());
+                                move.move();
                             }
                         }else{
-                            helpers.tryMove(rc.getLocation().directionTo(enemyArchon));
+                            move.moveToLoc(enemyArchon);
                         }
                     } else {
                         if (rc.canFireTriadShot()) {
@@ -53,11 +56,8 @@ public class Tank {
                         if (rc.canFireSingleShot()){
                             rc.fireSingleShot(rc.getLocation().directionTo(nlocs[nlocs.length - 1].getLocation()));
                         }
-                         if (nlocs[0].getLocation().isWithinDistance(rc.getLocation(), rc.getType().sensorRadius - 2)) {
-                            helpers.tryMove(rc.getLocation().directionTo(nlocs[0].getLocation()).opposite());
-                        } else {
-                            helpers.tryMove(rc.getLocation().directionTo(nlocs[0].getLocation()));
-                        }
+                        move.stayInLocationRange(nlocs[0].getLocation(),
+                                (int) rc.getType().sensorRadius - 1, (int) rc.getType().sensorRadius);
                     }
                     Clock.yield();
                 }catch(Exception e) {
