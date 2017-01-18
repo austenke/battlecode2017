@@ -2,7 +2,6 @@ package Main;
 import battlecode.common.*;
 import Helpers.HelperMethods;
 import Robots.*;
-import com.sun.tools.corba.se.idl.toJavaPortable.Helper;
 
 public strictfp class RobotPlayer {
     static RobotController rc;

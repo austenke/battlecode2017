@@ -1,6 +1,7 @@
 package Robots;
 
 import Helpers.HelperMethods;
+import Helpers.Movement;
 import battlecode.common.*;
 
 /**
@@ -9,12 +10,13 @@ import battlecode.common.*;
 public class Lumberjack {
     static RobotController rc;
     static HelperMethods helpers;
+    static Movement move;
 
     public Lumberjack(RobotController rc, HelperMethods helpers) {
         this.rc = rc;
         this.helpers = helpers;
+        this.move = new Movement(rc);
     }
-
 
     public static void run() throws GameActionException {
         while (true) {
@@ -38,7 +40,7 @@ public class Lumberjack {
                     }
                 }
                 if (! rc.hasAttacked()) {
-                    HelperMethods.tryMove(HelperMethods.randomDirection());
+                    move.move();
                 }
                 Clock.yield();
             } catch (Exception e) {

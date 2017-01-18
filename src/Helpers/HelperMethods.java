@@ -2,7 +2,6 @@ package Helpers;
 
 import battlecode.common.*;
 
-import java.util.ArrayList;
 import java.util.Random;
 
 /**
@@ -13,7 +12,7 @@ public class HelperMethods {
     static Random rand;
 
     public HelperMethods(RobotController rc) {
-        rand = new Random();
+        rand = new Random(rc.getID());
         this.rc = rc;
     }
 
@@ -25,133 +24,212 @@ public class HelperMethods {
         return new Direction((float)HelperMethods.randomNum() * 2 * (float)Math.PI);
     }
 
-    public static Direction dodgeBullets(Direction dir, int degreeOffset, int checksPerSide) throws GameActionException {
-        // Find nearby bullets
-        BulletInfo[] bullets = rc.senseNearbyBullets();
+//    // Iterates through all given bullets to see if they will collide with given location,
+//    // return the distance from the location to the bullets as an array
+//    public static ArrayList<Float> isMoveSafe(MapLocation loc, BulletInfo[] bullets) {
+//        ArrayList<Float> bulletDistances = new ArrayList<>();
+//        for (BulletInfo bullet : bullets) {
+//            if (willCollideWithMe(loc, bullet)) {
+//                bulletDistances.add(loc.distanceTo(bullet.getLocation()));
+//            }
+//        }
+//        return bulletDistances;
+//    }
 
-        if (bullets.length > 0) {
-            // List for bullets on collision course with robot
-            ArrayList<BulletInfo> bulletsWillCollide = new ArrayList<>();
+//    // safeStep alredy checks to see if robot can stay in current location, so this method assumes that
+//    // current location is unsafe
+//    public static Direction bulletDodge(BulletInfo[] bullets) throws GameActionException {
+//        ArrayList<Float> canStayStill = isMoveSafe(rc.getLocation(), bullets);
+//        if (canStayStill.size() == 0 || canStayStill.get(0) > 5) {
+//            return null;
+//        }
+//        else {
+//            Direction[] dirs = RobotPlayer.getDirList();
+//            float farthestDist = 0;
+//            Direction toGoDir = null;
+//            // For all directions, find which one is the farthest away from all bullets
+//            for (Direction dir : dirs) {
+//                float allDists = 0;
+//                for (BulletInfo bullet : bullets) {
+//                    allDists = allDists + rc.getLocation().add(dir, rc.getType().strideRadius).distanceTo(bullet.getLocation());
+//                }
+//                if (allDists > farthestDist && rc.canMove(dir)) {
+//                    farthestDist = allDists;
+//                    toGoDir = dir;
+//                }
+//            }
+//
+//            if (toGoDir == null) {
+//                return null;
+//            }
+//
+//            return safeStep(toGoDir, bullets);
+//        }
+//    }
 
-            // Initialize bulletsWillCollide
-            for (BulletInfo bullet : bullets) {
-                if (willCollideWithMe(rc.getLocation(), bullet)) {
-                    bulletsWillCollide.add(bullet);
-                }
-            }
-
-            // If there are bullets in range...
-            if (bulletsWillCollide.size() > 1) {
-                // Find the closest bullet
-                BulletInfo closestBullet = bulletsWillCollide.get(bulletsWillCollide.size() - 1);
-                BulletInfo secondClosestBullet = bulletsWillCollide.get(bulletsWillCollide.size() - 2);
-
-                // Find direction that will move the robot out of the closest bullet path and away from second
-                // closest bullet and move.
-                Direction closestBulletDirection = closestBullet.getDir();
-                MapLocation leftOfClosestBullet = rc.getLocation().add(closestBulletDirection.rotateLeftDegrees(90));
-                MapLocation rightOfClosestBullet = rc.getLocation().add(closestBulletDirection.rotateRightDegrees(90));
-
-                if (secondClosestBullet.getLocation().distanceTo(leftOfClosestBullet) >
-                        secondClosestBullet.getLocation().distanceTo(rightOfClosestBullet)) {
-                    return tryMove(closestBulletDirection.rotateLeftDegrees(90), degreeOffset, checksPerSide);
-                } else {
-                    return tryMove(closestBulletDirection.rotateRightDegrees(90), degreeOffset, checksPerSide);
-                }
-            } else if (bulletsWillCollide.size() == 1) {
-                BulletInfo secondClosest = bullets[bullets.length - 1];
-                if (secondClosest.getID() == bulletsWillCollide.get(0).getID() && bullets.length > 1) {
-                    secondClosest = bullets[bullets.length - 2];
-                }
-
-                Direction closestBulletDirection = bulletsWillCollide.get(0).getDir();
-                MapLocation leftOfClosestBullet = rc.getLocation().add(closestBulletDirection.rotateLeftDegrees(90));
-                MapLocation rightOfClosestBullet = rc.getLocation().add(closestBulletDirection.rotateRightDegrees(90));
-
-                if (secondClosest.getLocation().distanceTo(leftOfClosestBullet) >
-                        secondClosest.getLocation().distanceTo(rightOfClosestBullet)) {
-                    return tryMove(closestBulletDirection.rotateLeftDegrees(90), degreeOffset, checksPerSide);
-                } else {
-                    return tryMove(closestBulletDirection.rotateRightDegrees(90), degreeOffset, checksPerSide);
-                }
-            }
-            else {
-                for (BulletInfo bullet : bullets) {
-                    if (willCollideWithMe(rc.getLocation().add(dir), bullet)) {
-                        return dir;
-                    }
-                }
-                // After looping through each bullet, nothing will collide with me if I move forwards
-                // TODO: the second tryMove function could move you into the path of a bullet
-                return tryMove(dir, degreeOffset, checksPerSide);
-            }
-        }
-        else {
-            return null;
-        }
-    }
-
-    /**
-     * Attempts to move in a given direction, while avoiding small obstacles directly in the path.
-     *
-     * @param dir The intended direction of movement
-     * @return true if a move was performed
-     * @throws GameActionException
-     */
-    public static Direction tryMove(Direction dir) throws GameActionException {
-        int degreeOffset = 20;
-        int checksPerSide = 10;
-
-        Direction dodge = dodgeBullets(dir, degreeOffset, checksPerSide);
-        if (dodge == null) {
-            return tryMove(dir, degreeOffset, checksPerSide);
-        }
-        else {
-            return dodge;
-        }
-    }
-
-    /**
-     * Attempts to move in a given direction, while avoiding small obstacles direction in the path.
-     *
-     * @param dir The intended direction of movement
-     * @param degreeOffset Spacing between checked directions (degrees)
-     * @param checksPerSide Number of extra directions checked on each side, if intended direction was unavailable
-     * @return true if a move was performed
-     * @throws GameActionException
-     */
-    public static Direction tryMove(Direction dir, float degreeOffset, int checksPerSide) throws GameActionException {
-
-        // First, try intended direction
-        if (rc.canMove(dir)) {
-            rc.move(dir);
-            return dir;
-        }
-
-        // Now try a bunch of similar angles
-        boolean moved = false;
-        int currentCheck = 1;
-
-        while(currentCheck<=checksPerSide) {
-            // Try the offset of the left side
-            if(rc.canMove(dir.rotateLeftDegrees(degreeOffset*currentCheck))) {
-                Direction newDir = dir.rotateLeftDegrees(degreeOffset*currentCheck);
-                rc.move(newDir);
-                return newDir;
-            }
-            // Try the offset on the right side
-            if(rc.canMove(dir.rotateRightDegrees(degreeOffset*currentCheck))) {
-                Direction newDir = dir.rotateRightDegrees(degreeOffset*currentCheck);
-                rc.move(newDir);
-                return newDir;
-            }
-            // No move performed, try slightly further
-            currentCheck++;
-        }
-
-        // A move never happened, so return false.
-        return null;
-    }
+//    // Bullet dodge algorithm for movement, does the following:
+//    // - Finds the actual direction robot is going in
+//    // - Checks if bullets in range 4 will collide with new player location
+//    //    - If there are, check if it is safe to stay still
+//    //         - If it is safe to stay still, do so
+//    //         - If it is not safe to stay still, iterate through all directions tryMove style to find a safe one
+//    //    - If there aren't, move in normal direction
+//    public static Direction safeStep(Direction direction, BulletInfo[] bullets) throws GameActionException {
+//        Direction actualDir = tryDirs(direction);
+//
+//        //rc.setIndicatorLine(rc.getLocation(), rc.getLocation().add(actualDir).add(actualDir).add(actualDir),244, 66, 66);
+//
+//        if (actualDir == null) {
+//            return null;
+//        }
+//
+//        float strideRadius = rc.getType().strideRadius;
+//        ArrayList<Float> canMoveInDir = isMoveSafe(rc.getLocation().add(actualDir, strideRadius), bullets);
+//
+//        if (canMoveInDir.size() > 0 && canMoveInDir.get(0) <= 5) {
+//            ArrayList<Float> canStayStill = isMoveSafe(rc.getLocation(), bullets);
+//            if (canStayStill.size() == 0 || canStayStill.get(0) > 5) {
+//                return actualDir;
+//            }
+//            else {
+//                // Since we will be moving to the new locations, add 1 unit to bullet range
+//                ArrayList<Float> canMoveInOppDir = isMoveSafe(rc.getLocation().add(actualDir.opposite(), strideRadius), bullets);
+//                if ((canMoveInOppDir.size() == 0 || canMoveInOppDir.get(0) > 6) && rc.canMove(actualDir.opposite())) {
+//                    rc.move(actualDir.opposite());
+//                    return actualDir.opposite();
+//                }
+//                else {
+//                    int currentCheck = 1;
+//
+//                    while(currentCheck<=checksPerSide) {
+//                        Direction newDir = actualDir.rotateLeftDegrees(degreeOffset*currentCheck);
+//                        ArrayList<Float> tryAngle = isMoveSafe(rc.getLocation().add(newDir, strideRadius), bullets);
+//                        // Try the offset of the left side, if no bullets will collide or those bullets are
+//                        // a ways away, return the new direction
+//                        if((tryAngle.size() == 0 || tryAngle.get(0) > 6) && rc.canMove(newDir)) {
+//                            rc.move(newDir);
+//                            return newDir;
+//                        }
+//
+//                        rc.setIndicatorLine(rc.getLocation(), rc.getLocation().add(newDir).add(newDir).add(newDir),66,244,241);
+//
+//
+//                        newDir = actualDir.rotateRightDegrees(degreeOffset*currentCheck);
+//                        tryAngle = isMoveSafe(rc.getLocation().add(newDir, strideRadius), bullets);
+//                        // Try the offset on the right side
+//                        if((tryAngle.size() == 0 || tryAngle.get(0) > 6) && rc.canMove(newDir)) {
+//                            rc.move(newDir);
+//                            return newDir;
+//                        }
+//
+//                        rc.setIndicatorLine(rc.getLocation(), rc.getLocation().add(newDir).add(newDir).add(newDir),66,244,241);
+//
+//                        // No move performed, try slightly further
+//                        currentCheck++;
+//                    }
+//
+//                    // If nothing is safe, just stand still
+//                    rc.setIndicatorDot(rc.getLocation(), 66, 244, 119);
+//                    return null;
+//                }
+//            }
+//        }
+//        else {
+//            System.out.println(actualDir);
+//            rc.move(actualDir);
+//            return actualDir;
+//        }
+//    }
+//
+//    public static Direction dodgeBullets(Direction dir, int degreeOffset, int checksPerSide) throws GameActionException {
+//        // Find nearby bullets
+//        BulletInfo[] bullets = rc.senseNearbyBullets();
+//
+//        if (bullets.length > 0) {
+//            // List for bullets on collision course with robot
+//            ArrayList<BulletInfo> bulletsWillCollide = new ArrayList<>();
+//
+//            // Initialize bulletsWillCollide
+//            for (BulletInfo bullet : bullets) {
+//                if (willCollideWithMe(rc.getLocation(), bullet)) {
+//                    bulletsWillCollide.add(bullet);
+//                }
+//            }
+//
+//            // If there are bullets in range...
+//            if (bulletsWillCollide.size() > 1) {
+//                // Find the closest bullet
+//                BulletInfo closestBullet = bulletsWillCollide.get(0);
+//                BulletInfo secondClosestBullet = bulletsWillCollide.get(1);
+//
+//                // Find direction that will move the robot out of the closest bullet path and away from second
+//                // closest bullet and move.
+//                Direction closestBulletDirection = closestBullet.getDir();
+//                MapLocation leftOfClosestBullet = rc.getLocation().add(closestBulletDirection.rotateLeftDegrees(90), rc.getType().strideRadius);
+//                MapLocation rightOfClosestBullet = rc.getLocation().add(closestBulletDirection.rotateRightDegrees(90), rc.getType().strideRadius);
+//
+//                if (secondClosestBullet.getLocation().distanceTo(leftOfClosestBullet) >
+//                        secondClosestBullet.getLocation().distanceTo(rightOfClosestBullet)) {
+//                    return fullMove(closestBulletDirection.rotateLeftDegrees(90));
+//                } else {
+//                    return fullMove(closestBulletDirection.rotateRightDegrees(90));
+//                }
+//            } else if (bulletsWillCollide.size() == 1) {
+//                BulletInfo secondClosest = bullets[0];
+//                if (secondClosest.getID() == bulletsWillCollide.get(0).getID() && bullets.length > 1) {
+//                    secondClosest = bullets[1];
+//                }
+//
+//                Direction closestBulletDirection = bulletsWillCollide.get(0).getDir();
+//                MapLocation leftOfClosestBullet = rc.getLocation().add(closestBulletDirection.rotateLeftDegrees(90), rc.getType().strideRadius);
+//                MapLocation rightOfClosestBullet = rc.getLocation().add(closestBulletDirection.rotateRightDegrees(90), rc.getType().strideRadius);
+//
+//                if (secondClosest.getLocation().distanceTo(leftOfClosestBullet) >
+//                        secondClosest.getLocation().distanceTo(rightOfClosestBullet)) {
+//                    return fullMove(closestBulletDirection.rotateLeftDegrees(90));
+//                } else {
+//                    return fullMove(closestBulletDirection.rotateRightDegrees(90));
+//                }
+//            }
+//            else {
+//                for (BulletInfo bullet : bullets) {
+//                    if (willCollideWithMe(rc.getLocation().add(dir, rc.getType().strideRadius), bullet)) {
+//                        return dir;
+//                    }
+//                }
+//                // After looping through each bullet, nothing will collide with me if I move forwards
+//                // TODO: the second tryMove function could move you into the path of a bullet
+//                return fullMove(dir);
+//            }
+//        }
+//        else {
+//            return null;
+//        }
+//    }
+//
+//    /**
+//     * Attempts to move in a given direction, while avoiding small obstacles directly in the path.
+//     *
+//     * @param dir The intended direction of movement
+//     * @return true if a move was performed
+//     * @throws GameActionException
+//     */
+//    public static Direction tryMove(Direction dir) throws GameActionException {
+//        BulletInfo[] bullets = rc.senseNearbyBullets();
+//
+//        Direction results = safeStep(dir, bullets);
+//
+//        if (results == null) {
+//            results = bulletDodge(bullets);
+//            if (results == null) {
+//                return dir;
+//            }
+//            return results;
+//        }
+//        else {
+//            return results;
+//        }
+//    }
 
     //public static Direction findOpenLocation(MapLocation loc) {
 
@@ -194,37 +272,37 @@ public class HelperMethods {
         return rand.nextFloat();
     }
 
-    // Keeps robot in range and returns the direction it moved in
-    public static Direction stayInLocationRange(Direction goingDir, MapLocation myLoc, int minDist, int maxDist) throws GameActionException {
-        Direction togo = goingDir;
-        float archonDist = rc.getLocation().distanceTo(myLoc);
-        // Calculate random variation for direction to move in
-        float toRotate = (float) (randomNum() * 140) - 70;
-        // Check if robot has gone too far from archon
-        if (archonDist >= maxDist) {
-            if (!(rc.getLocation().add(goingDir).distanceTo(myLoc) < archonDist)) {
-                Direction archonDir = rc.getLocation().directionTo(myLoc);
-                togo = archonDir.rotateLeftDegrees(toRotate);
-            }
-        }
-        // Check if robot has come too close to archon
-        else if (archonDist <= minDist) {
-            if (!(rc.getLocation().add(goingDir).distanceTo(myLoc) >= archonDist)) {
-                Direction archonDir = rc.getLocation().directionTo(myLoc).opposite();
-                togo = archonDir.rotateLeftDegrees(toRotate);
-            }
-        }
-
-        Direction tryMoveResult = tryMove(togo);
-
-        // Only receive null if tryMove cannot go anywhere, so try going opposite direction
-        if (tryMoveResult == null) {
-            togo = togo.opposite();
-        }
-        else {
-            togo = tryMoveResult;
-        }
-
-        return togo;
-    }
+//    // Keeps robot in range and returns the direction it moved in
+//    public static Direction stayInLocationRange(Direction goingDir, MapLocation myLoc, int minDist, int maxDist) throws GameActionException {
+//        Direction togo = goingDir;
+//        float archonDist = rc.getLocation().distanceTo(myLoc);
+//        // Calculate random variation for direction to move in
+//        float toRotate = (float) (randomNum() * 140) - 70;
+//        // Check if robot has gone too far from archon
+//        if (archonDist >= maxDist) {
+//            if (!(rc.getLocation().add(goingDir).distanceTo(myLoc) < archonDist)) {
+//                Direction archonDir = rc.getLocation().directionTo(myLoc);
+//                togo = archonDir.rotateLeftDegrees(toRotate);
+//            }
+//        }
+//        // Check if robot has come too close to archon
+//        else if (archonDist <= minDist) {
+//            if (!(rc.getLocation().add(goingDir).distanceTo(myLoc) >= archonDist)) {
+//                Direction archonDir = rc.getLocation().directionTo(myLoc).opposite();
+//                togo = archonDir.rotateLeftDegrees(toRotate);
+//            }
+//        }
+//
+//        Direction tryMoveResult = tryMove(togo);
+//
+//        // Only receive null if tryMove cannot go anywhere, so try going opposite direction
+//        if (tryMoveResult == null) {
+//            togo = togo.opposite();
+//        }
+//        else {
+//            togo = tryMoveResult;
+//        }
+//
+//        return togo;
+//    }
 }

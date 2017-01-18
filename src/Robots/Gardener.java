@@ -1,10 +1,9 @@
 package Robots;
 
 import Helpers.HelperMethods;
+import Helpers.Movement;
 import Main.RobotPlayer;
 import battlecode.common.*;
-
-import java.awt.*;
 
 /**
  * Class for gardener robot.
@@ -12,16 +11,15 @@ import java.awt.*;
 public class Gardener {
     static RobotController rc;
     static HelperMethods helpers;
-    static Direction goingDir;
-    static MapLocation myArchon;
+    static Movement move;
 
     public Gardener(RobotController rc, HelperMethods helpers) {
         this.rc = rc;
         this.helpers = helpers;
+        this.move = new Movement(rc);
     }
 
     public static void run() throws GameActionException {
-        goingDir = HelperMethods.randomDirection();
         int gardenerCount = rc.readBroadcast(2);
         int buildOrPlant = -1;
         if((gardenerCount + 1) % 2 == 0) {
@@ -35,16 +33,16 @@ public class Gardener {
         rc.broadcast(2,gardenerCount + 1);
 
         MapLocation[] archons = rc.getInitialArchonLocations(rc.getTeam());
-        myArchon = archons[archons.length - 1];
+        MapLocation myArchon = archons[0];
+
+        for (MapLocation archonLoc : archons) {
+            if (rc.getLocation().distanceTo(myArchon) > rc.getLocation().distanceTo(archonLoc)) {
+                myArchon = archonLoc;
+            }
+        }
 
         // The code you want your robot to perform every round should be in this loop
         while (true) {
-            // Add indicator dot for middle of map
-            MapLocation foo = new MapLocation(300, 300);
-            rc.setIndicatorLine(foo, foo.add(HelperMethods.randomDirection()),66,244,241);
-            rc.setIndicatorDot(foo,66,244,241);
-            //System.out.println(foo);
-
             // Try/catch blocks stop unhandled exceptions, which cause your robot to explode
             try {
                 int minDist = -1;
@@ -52,21 +50,15 @@ public class Gardener {
                 if (!tryToWater()) {
                     if (buildOrPlant == 0) {
                         builderGardener();
-                        minDist = 22;
-                        maxDist = 30;
+                        minDist = 15;
+                        maxDist = 20;
                     } else if (buildOrPlant == 1) {
                         tryToPlant();
-                        minDist = 1;
+                        minDist = 0;
                         maxDist = 20;
                     }
-
-                    if (!rc.hasMoved()) {
-                        goingDir = HelperMethods.stayInLocationRange(goingDir, myArchon, minDist, maxDist);
-                    }
+                    move.stayInLocationRange(myArchon, minDist, maxDist);
                 }
-
-                // Add indicator line for current direction
-                rc.setIndicatorLine(rc.getLocation(), rc.getLocation().add(goingDir).add(goingDir).add(goingDir),66,244,241);
 
                 // Clock.yield() makes the robot wait until the next turn, then it will perform this loop again
                 Clock.yield();
@@ -80,118 +72,101 @@ public class Gardener {
 
     static void builderGardener() throws GameActionException {
 
-        if (!rc.getLocation().isWithinDistance(myArchon, 20)) {
+        //if (!rc.getLocation().isWithinDistance(myArchon, 20)) {
             // Generate a random direction
-            Direction[] dirList = RobotPlayer.getDirList();
-            Direction dir = dirList[0];
-            for(Direction d : dirList){
-                if(rc.canBuildRobot(RobotType.TANK,d)){
-                    dir = d;
-                    break;
-                }
+        Direction[] dirList = RobotPlayer.getDirList();
+        Direction dir = dirList[0];
+        for(Direction d : dirList){
+            if(rc.canBuildRobot(RobotType.TANK,d)){
+                dir = d;
+                break;
             }
+        }
 
-            System.out.println("dir");
-            // Randomly attempt to build a soldier or lumberjack in this direction
-            if (rc.getRobotCount() < 10) {
-                if (rc.canBuildRobot(RobotType.SOLDIER, dir) && (rc.getRobotCount() == 3 || rc.getRobotCount() == 5 || rc.getRobotCount() == 7 || rc.getRobotCount() == 9)) {
-                    rc.buildRobot(RobotType.SOLDIER, dir);
-                    System.out.println("bot");
-                }
-            }else if(rc.getRobotCount() < 15 && rc.canBuildRobot(RobotType.SCOUT, dir)){
-                    rc.buildRobot(RobotType.SCOUT, dir);
-            }else if(rc.getRobotCount() % 5 == 0 && rc.canBuildRobot(RobotType.TANK, dir)){
-                rc.buildRobot(RobotType.TANK, dir);
-            }else if(rc.getRobotCount() % 5 < 3 && rc.canBuildRobot(RobotType.SOLDIER, dir)){
+        if (rc.getRobotCount() < 10) {
+            if (rc.canBuildRobot(RobotType.SOLDIER, dir) && (rc.getRobotCount() == 3 || rc.getRobotCount() == 5 || rc.getRobotCount() == 7 || rc.getRobotCount() == 9)) {
                 rc.buildRobot(RobotType.SOLDIER, dir);
-            }else if(rc.getRobotCount() % 5 == 3 && rc.canBuildRobot(RobotType.SCOUT, dir)){
-                rc.buildRobot(RobotType.SCOUT, dir);
+                //System.out.println("bot");
             }
+        }else if(rc.getRobotCount() < 15 && rc.canBuildRobot(RobotType.SCOUT, dir)){
+            rc.buildRobot(RobotType.SCOUT, dir);
+        }else if(rc.getRobotCount() % 5 == 0 && rc.canBuildRobot(RobotType.TANK, dir)){
+            rc.buildRobot(RobotType.TANK, dir);
+        }else if(rc.getRobotCount() % 5 < 3 && rc.canBuildRobot(RobotType.SOLDIER, dir)){
+            rc.buildRobot(RobotType.SOLDIER, dir);
+        }else if(rc.getRobotCount() % 5 == 3 && rc.canBuildRobot(RobotType.SCOUT, dir)){
+            rc.buildRobot(RobotType.SCOUT, dir);
         }
     }
 
-    public static boolean tryToWater() throws GameActionException {
+    public static TreeInfo nearbyDyingTree() {
         TreeInfo[] trees = rc.senseNearbyTrees(-1, rc.getTeam());
 
         // trees in area, need to filter for low hp trees
         if (trees.length > 0) {
-            // set to null, if there are no low hp trees in area then it will stay null
-            TreeInfo treeToWater = null;
+            // Tree list is sorted by distance, so find closest low hp tree
             for (TreeInfo tree : trees) {
-                if (tree.getHealth() < GameConstants.BULLET_TREE_MAX_HEALTH - (GameConstants.WATER_HEALTH_REGEN_RATE * 2)) {
-                    if (treeToWater == null || treeToWater.getHealth() > tree.getHealth()) {
-                        treeToWater = tree;
-                    }
+                if (tree.getHealth() < GameConstants.BULLET_TREE_MAX_HEALTH - (GameConstants.WATER_HEALTH_REGEN_RATE * 3)) {
+                    return tree;
                 }
-            }
-
-            if (treeToWater != null) {
-                rc.setIndicatorDot(treeToWater.getLocation(),66,244,241);
-                // Lazy solution to occasional null goingDir values
-                Direction prevGoingDirection = goingDir;
-                // Not updating goingDir because that would interfere with watering mechanics.
-                // Instead handling movement by itself
-                if (rc.canWater(treeToWater.getLocation())) {
-                    int turnsToWater = (int) Math.ceil((GameConstants.BULLET_TREE_MAX_HEALTH - treeToWater.getHealth())
-                            / GameConstants.WATER_HEALTH_REGEN_RATE);
-                    // After calculating how long it will take to fully regenerate tree, loop for that amount of
-                    // times. There was a bug where water sometimes failed so also check if watering is possible for
-                    // each loop and if not move towards tree again (making sure to increase how many turns are
-                    // needed to water by 1).
-                    for (int i = 0; i < turnsToWater; i++) {
-                        if (rc.canWater(treeToWater.getLocation())) {
-                            rc.water(treeToWater.getLocation());
-                            Clock.yield();
-                        }
-                        else {
-                            goingDir = helpers.tryMove(rc.getLocation().directionTo(treeToWater.getLocation()));
-                            turnsToWater++;
-                            Clock.yield();
-                        }
-                    }
-                } else {
-                    goingDir = helpers.tryMove(rc.getLocation().directionTo(treeToWater.getLocation()));
-                }
-
-                if (goingDir == null) {
-                    goingDir = prevGoingDirection.opposite();
-                }
-
-                // Return true for watering
-                return true;
             }
         }
-        return false;
+
+        // No tree that is low hp in area so return null
+        return null;
+    }
+
+    // Code used by all gardeners, find nearby trees that need watering
+    public static boolean tryToWater() throws GameActionException {
+        TreeInfo treeToWater = nearbyDyingTree();
+
+        if (treeToWater != null) {
+            rc.setIndicatorDot(rc.getLocation(),66,244,69);
+
+            if (rc.canWater(treeToWater.getLocation())) {
+                int turnsToWater = (int) Math.ceil((GameConstants.BULLET_TREE_MAX_HEALTH - treeToWater.getHealth())
+                        / GameConstants.WATER_HEALTH_REGEN_RATE);
+                // After calculating how long it will take to fully regenerate tree, loop for that amount of
+                // times. There was a bug where water sometimes failed so also check if watering is possible for
+                // each loop and if not move towards tree again (making sure to increase how many turns are
+                // needed to water by 1).
+                for (int i = 0; i < turnsToWater; i++) {
+                    // Ensure gardener is next to tree and dodging bullets
+                    move.moveToLoc(treeToWater.getLocation());
+                    if (rc.canWater(treeToWater.getLocation())) {
+                        rc.water(treeToWater.getLocation());
+                    }
+                    Clock.yield();
+                }
+            } else {
+                move.moveToLoc(treeToWater.getLocation());
+            }
+
+            // Return true for watering
+            return true;
+        }
+        else {
+            return false;
+        }
     }
 
     public static void tryToPlant() throws GameActionException {
         Direction[] dirList = RobotPlayer.getDirList();
-        if(rc.getTeamBullets()>GameConstants.BULLET_TREE_COST && rc.getLocation().distanceTo(myArchon) > 2) {//have enough bullets. assuming we haven't built already.
+        if(rc.getTeamBullets() > GameConstants.BULLET_TREE_COST) {
             for (int i = 0; i < dirList.length; i++) {
                 //only plant trees on a sub-grid
                 MapLocation p = rc.getLocation().add(dirList[i],GameConstants.GENERAL_SPAWN_OFFSET+GameConstants.BULLET_TREE_RADIUS+rc.getType().bodyRadius);
-                if(modGood(p.x,6,0.3f)&&modGood(p.y,6,0.3f)) {
+                if(modGood(p.x,6,0.2f)&&modGood(p.y,6,0.2f)) {
                     if (rc.canPlantTree(dirList[i])) {
                         rc.plantTree(dirList[i]);
-                        break;
+                        return;
                     }
                 }
-                rc.setIndicatorDot(p, 66, 244, 80);
             }
         }
     }
 
     public static boolean modGood(float number,float spacing, float fraction){
         return (number%spacing)<spacing*fraction;
-    }
-
-    static boolean noTreeInRange(int range) {
-        for (TreeInfo tree : rc.senseNearbyTrees(-1, rc.getTeam())) {
-            if (rc.getLocation().isWithinDistance(tree.getLocation(), range)) {
-                return false;
-            }
-        }
-
-        return true;
     }
 }

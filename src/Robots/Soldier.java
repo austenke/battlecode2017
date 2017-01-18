@@ -2,7 +2,7 @@ package Robots;
 
 import battlecode.common.*;
 import Helpers.HelperMethods;
-import java.awt.*;
+import Helpers.Movement;
 
 /**
  * Class for soldier robot.
@@ -10,10 +10,12 @@ import java.awt.*;
 public class Soldier {
     static RobotController rc;
     static HelperMethods helpers;
+    static Movement move;
 
     public Soldier(RobotController rc, HelperMethods helpers) {
         this.rc = rc;
         this.helpers = helpers;
+        this.move = new Movement(rc);
     }
 
     public static void run() {
@@ -46,14 +48,12 @@ public class Soldier {
                         // ...Then fire a bullet in the direction of the enemy.
                         rc.fireSingleShot(rc.getLocation().directionTo(lowestHealthRobot.getLocation()));
                     }
-                    if (enemyRobots[0].getLocation().isWithinDistance(rc.getLocation(), rc.getType().sensorRadius - 2)) {
-                        helpers.tryMove(rc.getLocation().directionTo(enemyRobots[0].getLocation()).opposite());
-                    } else {
-                        helpers.tryMove(rc.getLocation().directionTo(enemyRobots[0].getLocation()));
-                    }
+
+                    move.stayInLocationRange(enemyRobots[0].getLocation(),
+                            (int) rc.getType().sensorRadius - 2, (int) rc.getType().sensorRadius);
                 }
                 else {
-                    helpers.tryMove(HelperMethods.randomDirection());
+                    move.move();
                 }
 
                 // Clock.yield() makes the robot wait until the next turn, then it will perform this loop again
@@ -61,6 +61,10 @@ public class Soldier {
 
             } catch (Exception e) {
                 System.out.println("Soldier Exception");
+                try {
+                    rc.setIndicatorDot(rc.getLocation(), 66, 134, 244);
+                }
+                catch (Exception f) { }
                 e.printStackTrace();
             }
         }
