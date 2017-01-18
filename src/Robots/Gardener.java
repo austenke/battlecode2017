@@ -25,11 +25,11 @@ public class Gardener {
         int gardenerCount = rc.readBroadcast(2);
         int buildOrPlant = -1;
         if((gardenerCount + 1) % 2 == 0) {
-            buildOrPlant = 0;
+            buildOrPlant = 1;
             //System.out.println("I'm a builder gardener!");
         }
         else {
-            buildOrPlant = 1;
+            buildOrPlant = 0;
             //System.out.println("I'm a planter gardener!");
         }
         rc.broadcast(2,gardenerCount + 1);
@@ -82,10 +82,15 @@ public class Gardener {
 
         if (!rc.getLocation().isWithinDistance(myArchon, 20)) {
             // Generate a random direction
-            Direction dir = helpers.randomDirection();
-            while(!rc.canBuildRobot(RobotType.TANK, dir) && rc.getTeamBullets() >= 100){
-                dir = helpers.randomDirection();
+            Direction[] dirList = RobotPlayer.getDirList();
+            Direction dir = dirList[0];
+            for(Direction d : dirList){
+                if(rc.canBuildRobot(RobotType.TANK,d)){
+                    dir = d;
+                    break;
+                }
             }
+
             System.out.println("dir");
             // Randomly attempt to build a soldier or lumberjack in this direction
             if (rc.getRobotCount() < 10) {
