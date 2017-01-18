@@ -1,6 +1,7 @@
 package Robots;
 
 import Helpers.HelperMethods;
+import Main.RobotPlayer;
 import battlecode.common.*;
 
 import static Helpers.HelperMethods.randomDirection;
@@ -25,9 +26,13 @@ public class Archon {
             try {
 
                 // Generate a random direction
-                Direction dir = randomDirection();
-                while(!rc.canHireGardener(dir) && rc.getTeamBullets() >= 100){
-                    dir = randomDirection();
+                Direction[] dirList = RobotPlayer.getDirList();
+                Direction dir = dirList[0];
+                for(Direction d : dirList){
+                    if(rc.canBuildRobot(RobotType.TANK,d)){
+                        dir = d;
+                        break;
+                    }
                 }
                 if (rc.getRobotCount() < 10) {
                     if (rc.canHireGardener(dir) && (rc.getRobotCount() == 1 || rc.getRobotCount() == 2 || rc.getRobotCount() == 4 || rc.getRobotCount() == 6 || rc.getRobotCount() == 8)) {
