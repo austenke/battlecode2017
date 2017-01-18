@@ -50,7 +50,7 @@ public class Soldier {
                     }
 
                     move.stayInLocationRange(enemyRobots[0].getLocation(),
-                            (int) rc.getType().sensorRadius - 2, (int) rc.getType().sensorRadius);
+                            (int) rc.getType().sensorRadius - 3, (int) rc.getType().sensorRadius - 1);
                 }
                 else {
                     move.move();
