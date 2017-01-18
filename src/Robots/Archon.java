@@ -34,8 +34,9 @@ public class Archon {
                         break;
                     }
                 }
+                int numArchons = rc.getInitialArchonLocations(rc.getTeam()).length;
                 if (rc.getRobotCount() < 10) {
-                    if (rc.canHireGardener(dir) && (rc.getRobotCount() == 1 || rc.getRobotCount() == 2 || rc.getRobotCount() == 4 || rc.getRobotCount() == 6 || rc.getRobotCount() == 8)) {
+                    if (rc.canHireGardener(dir) && (rc.getRobotCount() == numArchons || rc.getRobotCount() == numArchons + 1 || rc.getRobotCount() == numArchons + 3 || rc.getRobotCount() == numArchons + 5 || rc.getRobotCount() == numArchons + 7)) {
                         rc.hireGardener(dir);
                     }
                 }else if (rc.getRobotCount() % 5 == 4 && rc.canHireGardener(dir)){

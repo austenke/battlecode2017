@@ -23,11 +23,11 @@ public class Gardener {
         int gardenerCount = rc.readBroadcast(2);
         int buildOrPlant = -1;
         if((gardenerCount + 1) % 2 == 0) {
-            buildOrPlant = 1;
+            buildOrPlant = 0;
             //System.out.println("I'm a builder gardener!");
         }
         else {
-            buildOrPlant = 0;
+            buildOrPlant = 1;
             //System.out.println("I'm a planter gardener!");
         }
         rc.broadcast(2,gardenerCount + 1);
@@ -82,9 +82,9 @@ public class Gardener {
                 break;
             }
         }
-
+        int numArchons = rc.getInitialArchonLocations(rc.getTeam()).length;
         if (rc.getRobotCount() < 10) {
-            if (rc.canBuildRobot(RobotType.SOLDIER, dir) && (rc.getRobotCount() == 3 || rc.getRobotCount() == 5 || rc.getRobotCount() == 7 || rc.getRobotCount() == 9)) {
+            if (rc.canBuildRobot(RobotType.SOLDIER, dir) && (rc.getRobotCount() == numArchons + 2 || rc.getRobotCount() == numArchons + 4 || rc.getRobotCount() == numArchons + 6 || rc.getRobotCount() == numArchons + 8)) {
                 rc.buildRobot(RobotType.SOLDIER, dir);
                 //System.out.println("bot");
             }
