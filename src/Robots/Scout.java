@@ -22,20 +22,20 @@ public class Scout {
         // The code you want your robot to perform every round should be in this loop
         while (true) {
             try {
-                move.move();
+                MapLocation[] archons = rc.getInitialArchonLocations(rc.getTeam().opponent());
+                MapLocation myArchon = archons[0];
+
+                for (MapLocation archonLoc : archons) {
+                    if (rc.getLocation().distanceTo(myArchon) > rc.getLocation().distanceTo(archonLoc)) {
+                        myArchon = archonLoc;
+                    }
+                }
+
+                move.stayInLocationRange(myArchon, 10, 30);
                 Clock.yield();
             } catch (Exception e) {
                 System.out.println("Scout Exception");
                 e.printStackTrace();
-            }
-        }
-    }
-
-    public static void detect() {
-        RobotInfo[] nearbyEnemies = rc.senseNearbyRobots(-1, rc.getTeam().opponent());
-        for (RobotInfo enemy : nearbyEnemies) {
-            for (RobotInfo linkedUnits : nearbyEnemies) {
-
             }
         }
     }

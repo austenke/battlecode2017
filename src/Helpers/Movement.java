@@ -28,14 +28,40 @@ public class Movement {
             // Generate a list of all possible directions that can be moved to
             ArrayList<Direction> possibleDirections = tryDirs();
 
-            // Loop through list of possible directions to find one that will avoid contact with bullets
-            for (Direction dir : possibleDirections) {
-                MapLocation newLoc = rc.getLocation().add(dir, rc.getType().strideRadius);
-                if (bulletsCollideAtLoc(newLoc).size() == 0) {
-                    currentDir = dir;
-                    rc.move(currentDir);
-                    return;
+            // Generate a list of closest bullet distances
+            ArrayList<Float> bulletDists = new ArrayList<>();
+
+            // Check if there are possible moves, otherwise don't bother
+            if (possibleDirections.size() > 0) {
+                // Loop through list of possible directions to find one that will avoid contact with bullets
+                for (Direction dir : possibleDirections) {
+                    MapLocation newLoc = rc.getLocation().add(dir, rc.getType().strideRadius);
+                    ArrayList<Float> bulletsInPath = bulletsCollideAtLoc(newLoc);
+                    if (bulletsInPath.size() == 0) {
+                        currentDir = dir;
+                        rc.move(currentDir);
+                        return;
+                    } else {
+                        // If there are bullets that will collide, add closest one to bulletDists
+                        bulletDists.add(bulletsInPath.get(0));
+                    }
                 }
+
+                // Every location has colliding bullets, so go to location with farthest away closest bullet
+                float maxDist = 0;
+                int index = -1;
+                for (int i = 0; i < bulletDists.size(); i++) {
+                    float dist = bulletDists.get(i);
+                    if (dist > maxDist) {
+                        maxDist = dist;
+                        index = i;
+                    }
+                }
+
+                // If every location is invalid, there should be a bulletDists value for every possibleDirections value
+                currentDir = possibleDirections.get(index);
+                rc.setIndicatorLine(rc.getLocation(), rc.getLocation().add(currentDir, 5),235, 244, 66);
+                rc.move(currentDir);
             }
         }
     }
@@ -136,6 +162,7 @@ public class Movement {
             for (int i = 0; i < 5; i++) {
                 MapLocation newLoc = currentLoc.add(dirToLoc, rc.getType().strideRadius);
                 if (rc.isLocationOccupied(newLoc) && newLoc.distanceTo(loc) > 2) {
+                    // Path is occupied, just move normally
                     move();
                     return;
                 }
