@@ -21,8 +21,13 @@ public class Scout {
     public static void run() throws GameActionException {
         // The code you want your robot to perform every round should be in this loop
         while (true) {
-            move.move();
-            Clock.yield();
+            try {
+                move.move();
+                Clock.yield();
+            } catch (Exception e) {
+                System.out.println("Scout Exception");
+                e.printStackTrace();
+            }
         }
     }
 

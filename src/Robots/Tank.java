@@ -3,8 +3,6 @@ package Robots;
 import Helpers.HelperMethods;
 import Helpers.Movement;
 import battlecode.common.*;
-import org.apache.commons.lang3.ObjectUtils;
-import scala.tools.nsc.backend.jvm.analysis.Null;
 
 public class Tank {
     static RobotController rc;

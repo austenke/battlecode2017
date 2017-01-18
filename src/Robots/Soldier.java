@@ -3,7 +3,6 @@ package Robots;
 import battlecode.common.*;
 import Helpers.HelperMethods;
 import Helpers.Movement;
-import java.awt.*;
 
 /**
  * Class for soldier robot.

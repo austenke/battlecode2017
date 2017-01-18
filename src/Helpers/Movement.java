@@ -1,13 +1,9 @@
 package Helpers;
 
-import Main.RobotPlayer;
 import battlecode.common.*;
 
-import java.awt.*;
 import java.util.ArrayList;
-import java.util.Map;
 import java.util.Random;
-import java.util.Arrays;
 
 /**
  * Class used for standard robot movement

@@ -1,10 +1,7 @@
 package Helpers;
 
-import Main.RobotPlayer;
 import battlecode.common.*;
 
-import java.util.ArrayList;
-import java.util.Map;
 import java.util.Random;
 
 /**
