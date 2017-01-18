@@ -54,14 +54,8 @@ public class Gardener {
                         maxDist = 20;
                     } else if (buildOrPlant == 1) {
                         tryToPlant();
-                        if (rc.getTreeCount() < 5) {
-                            minDist = 0;
-                            maxDist = 10;
-                        }
-                        else {
-                            minDist = 0;
-                            maxDist = 20;
-                        }
+                        minDist = 0;
+                        maxDist = 20;
                     }
                     move.stayInLocationRange(myArchon, minDist, maxDist);
                 }
@@ -162,7 +156,7 @@ public class Gardener {
                 if(modGood(p.x,6,0.2f)&&modGood(p.y,6,0.2f)) {
                     if (rc.canPlantTree(dirList[i])) {
                         rc.plantTree(dirList[i]);
-                        break;
+                        return;
                     }
                 }
             }

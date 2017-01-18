@@ -83,13 +83,11 @@ public class Movement {
             if(rc.canMove(currentDir.rotateLeftDegrees(degreeOffset*currentCheck))) {
                 Direction newDir = currentDir.rotateLeftDegrees(degreeOffset*currentCheck);
                 availableDirs.add(newDir);
-                rc.setIndicatorLine(rc.getLocation(), rc.getLocation().add(newDir, 4),166, 193, 237);
             }
             // Try the offset on the right side
             if(rc.canMove(currentDir.rotateRightDegrees(degreeOffset*currentCheck))) {
                 Direction newDir = currentDir.rotateRightDegrees(degreeOffset*currentCheck);
                 availableDirs.add(newDir);
-                rc.setIndicatorLine(rc.getLocation(), rc.getLocation().add(newDir, 4),166, 193, 237);
             }
             currentCheck++;
         }
@@ -105,6 +103,7 @@ public class Movement {
 
             // Loop through list of possible directions to find one that will avoid contact with bullets
             for (Direction dir : possibleDirections) {
+                rc.setIndicatorLine(rc.getLocation(), rc.getLocation().add(dir, 4),166, 193, 237);
                 MapLocation newLoc = rc.getLocation().add(dir, rc.getType().strideRadius);
                 if (bulletsCollideAtLoc(newLoc).size() == 0) {
                     currentDir = dir;
