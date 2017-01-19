@@ -12,11 +12,13 @@ public class Gardener {
     static RobotController rc;
     static HelperMethods helpers;
     static Movement move;
+    static boolean watering;
 
     public Gardener(RobotController rc, HelperMethods helpers) {
         this.rc = rc;
         this.helpers = helpers;
         this.move = new Movement(rc);
+        this.watering = false;
     }
 
     public static void run() throws GameActionException {
@@ -47,16 +49,20 @@ public class Gardener {
             try {
                 int minDist = -1;
                 int maxDist = -1;
-                if (!tryToWater()) {
-                    if (buildOrPlant == 0) {
-                        builderGardener();
-                        minDist = 15;
-                        maxDist = 20;
-                    } else if (buildOrPlant == 1) {
-                        tryToPlant();
-                        minDist = 0;
-                        maxDist = 20;
-                    }
+
+                tryToWater();
+
+                if (buildOrPlant == 0) {
+                    builderGardener();
+                    minDist = 15;
+                    maxDist = 20;
+                } else if (buildOrPlant == 1) {
+                    tryToPlant();
+                    minDist = 0;
+                    maxDist = 20;
+                }
+
+                if (!rc.hasMoved()) {
                     move.stayInLocationRange(myArchon, minDist, maxDist);
                 }
 
@@ -106,7 +112,7 @@ public class Gardener {
         if (trees.length > 0) {
             // Tree list is sorted by distance, so find closest low hp tree
             for (TreeInfo tree : trees) {
-                if (tree.getHealth() < GameConstants.BULLET_TREE_MAX_HEALTH - (GameConstants.WATER_HEALTH_REGEN_RATE * 3)) {
+                if (tree.getHealth() < GameConstants.BULLET_TREE_MAX_HEALTH - (GameConstants.WATER_HEALTH_REGEN_RATE )) {
                     return tree;
                 }
             }
@@ -117,36 +123,15 @@ public class Gardener {
     }
 
     // Code used by all gardeners, find nearby trees that need watering
-    public static boolean tryToWater() throws GameActionException {
+    public static void tryToWater() throws GameActionException {
         TreeInfo treeToWater = nearbyDyingTree();
 
         if (treeToWater != null) {
-            rc.setIndicatorDot(rc.getLocation(),66,244,69);
-
             if (rc.canWater(treeToWater.getLocation())) {
-                int turnsToWater = (int) Math.ceil((GameConstants.BULLET_TREE_MAX_HEALTH - treeToWater.getHealth())
-                        / GameConstants.WATER_HEALTH_REGEN_RATE);
-                // After calculating how long it will take to fully regenerate tree, loop for that amount of
-                // times. There was a bug where water sometimes failed so also check if watering is possible for
-                // each loop and if not move towards tree again (making sure to increase how many turns are
-                // needed to water by 1).
-                for (int i = 0; i < turnsToWater; i++) {
-                    // Ensure gardener is next to tree and dodging bullets
-                    move.moveToLoc(treeToWater.getLocation());
-                    if (rc.canWater(treeToWater.getLocation())) {
-                        rc.water(treeToWater.getLocation());
-                    }
-                    Clock.yield();
-                }
+                rc.water(treeToWater.getLocation());
             } else {
                 move.moveToLoc(treeToWater.getLocation());
             }
-
-            // Return true for watering
-            return true;
-        }
-        else {
-            return false;
         }
     }
 
