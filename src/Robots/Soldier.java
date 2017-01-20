@@ -26,9 +26,6 @@ public class Soldier {
 
             // Try/catch blocks stop unhandled exceptions, which cause your robot to explode
             try {
-                MapLocation myLocation = rc.getLocation();
-                MapLocation tankLoc = new MapLocation(rc.readBroadcast(0),rc.readBroadcast(1));
-
                 // See if there are any nearby enemy robots
                 RobotInfo[] enemyRobots = rc.senseNearbyRobots(-1, enemy);
 
