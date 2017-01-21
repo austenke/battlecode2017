@@ -54,7 +54,7 @@ public class Gardener {
 
                 if (buildOrPlant == 0) {
                     builderGardener();
-                    minDist = 15;
+                    minDist = 10;
                     maxDist = 20;
                 } else if (buildOrPlant == 1) {
                     tryToPlant();
