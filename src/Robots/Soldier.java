@@ -18,12 +18,45 @@ public class Soldier {
         this.move = new Movement(rc);
     }
 
-    public static void run() {
+    public static void run() throws GameActionException {
+        MapLocation[] archons = rc.getInitialArchonLocations(rc.getTeam());
+        MapLocation myArchon = archons[0];
+
+        for (MapLocation archonLoc : archons) {
+            if (rc.getLocation().distanceTo(myArchon) > rc.getLocation().distanceTo(archonLoc)) {
+                myArchon = archonLoc;
+            }
+        }
+
+        int soldierCount = rc.readBroadcast(3);
+        int stayWithMe = -1;
+        if (soldierCount < 3 || (soldierCount + 1) % 3 == 0) {
+            stayWithMe = 1;
+            //System.out.println("I'm a builder gardener!");
+        } else {
+            stayWithMe = 0;
+            //System.out.println("I'm a planter gardener!");
+        }
+        rc.broadcast(3, soldierCount + 1);
+
+        while (true){
+            try{
+                if(stayWithMe == 0){
+                    attackSoldier();
+                }else if(stayWithMe == 1){
+                    defenseSoldier(myArchon);
+                }
+                Clock.yield();
+            }catch (Exception e) {
+                System.out.println("Soldier Exception");
+                e.printStackTrace();
+            }
+        }
+    }
+    static void attackSoldier() throws GameActionException{
         Team enemy = rc.getTeam().opponent();
 
-        // The code you want your robot to perform every round should be in this loop
         while (true) {
-
             // Try/catch blocks stop unhandled exceptions, which cause your robot to explode
             try {
                 MapLocation myLocation = rc.getLocation();
@@ -67,6 +100,22 @@ public class Soldier {
                 catch (Exception f) { }
                 e.printStackTrace();
             }
+        }
+    }
+
+    static void defenseSoldier(MapLocation myArchon) throws GameActionException{
+        RobotInfo[] enemyRobots = rc.senseNearbyRobots(-1, rc.getTeam().opponent());
+
+        move.stayInLocationRange(myArchon, 0, 20);
+
+        if(enemyRobots.length != 0){
+            RobotInfo lowestHealthRobot = enemyRobots[0];
+            for (RobotInfo robot : enemyRobots) {
+                if (lowestHealthRobot.health > robot.health) {
+                    lowestHealthRobot = robot;
+                }
+            }
+            rc.fireSingleShot(rc.getLocation().directionTo(lowestHealthRobot.getLocation()));
         }
     }
 }

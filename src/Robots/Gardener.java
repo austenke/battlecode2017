@@ -92,6 +92,7 @@ public class Gardener {
             rc.buildRobot(RobotType.SCOUT, dir);
         }else if(rc.getRobotCount() % 5 == 0 && rc.canBuildRobot(RobotType.TANK, dir)){
             rc.buildRobot(RobotType.TANK, dir);
+            System.out.println("built tank");
         }else if(rc.getRobotCount() % 5 < 3 && rc.canBuildRobot(RobotType.SOLDIER, dir)){
             rc.buildRobot(RobotType.SOLDIER, dir);
         }else if(rc.getRobotCount() % 5 == 3 && rc.canBuildRobot(RobotType.SCOUT, dir)){

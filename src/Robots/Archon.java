@@ -29,7 +29,7 @@ public class Archon {
                 Direction[] dirList = RobotPlayer.getDirList();
                 Direction dir = dirList[0];
                 for(Direction d : dirList){
-                    if(rc.canBuildRobot(RobotType.TANK,d)){
+                    if(rc.canBuildRobot(RobotType.GARDENER,d)){
                         dir = d;
                         break;
                     }

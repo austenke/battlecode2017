@@ -1,5 +1,6 @@
 package Helpers;
 
+import Robots.Tank;
 import battlecode.common.*;
 
 import java.util.ArrayList;
@@ -34,6 +35,22 @@ public class Movement {
                 if (bulletsCollideAtLoc(newLoc).size() == 0) {
                     currentDir = dir;
                     rc.move(currentDir);
+                    return;
+                }
+            }
+        }
+    }
+
+    public static void tankMove() throws GameActionException{
+        if(rc.canMove(currentDir)){
+            rc.move(currentDir);
+        }
+        else{
+            ArrayList<Direction> possibleDirections = tryDirs();
+
+            for(Direction dir: possibleDirections){
+                if(rc.canMove(dir)){
+                    rc.move(dir);
                     return;
                 }
             }
@@ -124,8 +141,22 @@ public class Movement {
         move();
     }
 
+    public static void tankStayInLocationRange(MapLocation loc, int minDist, int maxDist) throws GameActionException {
+        MapLocation robotLoc = rc.getLocation();
+        Direction dirToLoc = robotLoc.directionTo(loc);
+        float disToLoc = robotLoc.distanceTo(loc);
+        if (disToLoc > maxDist) {
+            currentDir = newVariedDirection(dirToLoc, 60);
+        }
+        else if (disToLoc < minDist) {
+            currentDir = newVariedDirection(dirToLoc.opposite(), 60);
+        }
+
+        tankMove();
+    }
+
     public static void moveToLoc(MapLocation loc) throws GameActionException {
-        if (rc.getLocation().distanceTo(loc) < 3) {
+        if (rc.getLocation().distanceTo(loc) < 3 && (rc.getType() != RobotType.TANK)) {
             standingDodge();
         }
         else {
@@ -143,6 +174,25 @@ public class Movement {
             // Area is clear, proceed with move
             currentDir = dirToLoc;
             move();
+        }
+    }
+
+    public static void tankMoveToLoc(MapLocation loc) throws GameActionException {
+        if(rc.getLocation().distanceTo(loc) >= 3){
+            rc.setIndicatorLine(rc.getLocation(), loc, 244, 98, 66);
+            Direction dirToLoc = rc.getLocation().directionTo(loc);
+            MapLocation currentLoc = rc.getLocation();
+            // Loop 5 moves in advance, see if area is clear
+            for (int i = 0; i < 5; i++) {
+                MapLocation newLoc = currentLoc.add(dirToLoc, rc.getType().strideRadius);
+                if (rc.isLocationOccupied(newLoc) && newLoc.distanceTo(loc) > 2) {
+                    tankMove();
+                    return;
+                }
+            }
+            // Area is clear, proceed with move
+            currentDir = dirToLoc;
+            tankMove();
         }
     }
 }

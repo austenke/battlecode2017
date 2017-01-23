@@ -42,10 +42,10 @@ public class Tank {
                                 move.moveToLoc(floc);
                             }
                             else{
-                                move.move();
+                                move.tankMove();
                             }
                         }else{
-                            move.moveToLoc(enemyArchon);
+                            move.tankMoveToLoc(enemyArchon);
                         }
                     } else {
                         if (rc.canFireTriadShot()) {
@@ -54,7 +54,7 @@ public class Tank {
                         if (rc.canFireSingleShot()){
                             rc.fireSingleShot(rc.getLocation().directionTo(nlocs[nlocs.length - 1].getLocation()));
                         }
-                        move.stayInLocationRange(nlocs[0].getLocation(),
+                        move.tankStayInLocationRange(nlocs[0].getLocation(),
                                 (int) rc.getType().sensorRadius - 1, (int) rc.getType().sensorRadius);
                     }
                     Clock.yield();
