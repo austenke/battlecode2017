@@ -43,7 +43,7 @@ public class Soldier {
             try{
                 if(stayWithMe == 0){
                     attackSoldier();
-                }else if(stayWithMe == 1){
+                }else{
                     defenseSoldier(myArchon);
                 }
                 Clock.yield();
@@ -59,37 +59,43 @@ public class Soldier {
         while (true) {
             // Try/catch blocks stop unhandled exceptions, which cause your robot to explode
             try {
-                MapLocation myLocation = rc.getLocation();
-                MapLocation tankLoc = new MapLocation(rc.readBroadcast(0),rc.readBroadcast(1));
+                RobotInfo[] enemyRobots = rc.senseNearbyRobots(-1, rc.getTeam().opponent());
+                int enemyTankX = rc.readBroadcast(3);
+                int enemyTankY = rc.readBroadcast(4);
 
-                // See if there are any nearby enemy robots
-                RobotInfo[] enemyRobots = rc.senseNearbyRobots(-1, enemy);
+                if (enemyTankX != -1 && enemyTankY != -1) {
+                    MapLocation enemyTankLoc = new MapLocation(enemyTankX, enemyTankY);
 
-                // See if there are any nearby friendly robots
-                RobotInfo[] friendlyRobots = rc.senseNearbyRobots(-1, rc.getTeam());
-
-                // If there are some...
-                if (enemyRobots.length > 0) {
-                    // And we have enough bullets, and haven't attacked yet this turn...
-                    if (rc.canFireSingleShot()) {
-                        RobotInfo lowestHealthRobot = enemyRobots[0];
+                    // See if tank is in area, if not clear broadcast
+                    if (rc.getLocation().distanceTo(enemyTankLoc) > 5) {
                         for (RobotInfo robot : enemyRobots) {
-                            if (lowestHealthRobot.health > robot.health) {
-                                lowestHealthRobot = robot;
+                            if (robot.getType() == RobotType.TANK) {
+                                rc.broadcast(3, (int) robot.getLocation().x);
+                                rc.broadcast(4, (int) robot.getLocation().y);
+
+                            }
+                            // This will run a bunch but will not matter overall if there is a tank in range,
+                            // make this more efficient is bytecode is an issue
+                            else {
+                                rc.broadcast(3, -1);
+                                rc.broadcast(4, -1);
                             }
                         }
-                        // ...Then fire a bullet in the direction of the enemy.
-                        rc.fireSingleShot(rc.getLocation().directionTo(lowestHealthRobot.getLocation()));
                     }
 
+                    move.stayInLocationRange(enemyTankLoc,
+                            (int) rc.getType().sensorRadius - 3, (int) rc.getType().sensorRadius - 1);
+                }
+                // If there are some enemy robots in area
+                else if (enemyRobots.length > 0) {
                     move.stayInLocationRange(enemyRobots[0].getLocation(),
-                            (int) rc.getType().sensorRadius - 2, (int) rc.getType().sensorRadius);
+                            (int) rc.getType().sensorRadius - 3, (int) rc.getType().sensorRadius - 1);
                 }
                 else {
                     move.move();
                 }
 
-                // Clock.yield() makes the robot wait until the next turn, then it will perform this loop again
+                shootNearby();
                 Clock.yield();
 
             } catch (Exception e) {
@@ -103,19 +109,39 @@ public class Soldier {
         }
     }
 
-    static void defenseSoldier(MapLocation myArchon) throws GameActionException{
+
+    static void defenseSoldier(MapLocation myArchon) throws GameActionException {
         RobotInfo[] enemyRobots = rc.senseNearbyRobots(-1, rc.getTeam().opponent());
 
         move.stayInLocationRange(myArchon, 0, 20);
 
-        if(enemyRobots.length != 0){
+        if (enemyRobots.length != 0) {
             RobotInfo lowestHealthRobot = enemyRobots[0];
             for (RobotInfo robot : enemyRobots) {
                 if (lowestHealthRobot.health > robot.health) {
                     lowestHealthRobot = robot;
                 }
             }
-            rc.fireSingleShot(rc.getLocation().directionTo(lowestHealthRobot.getLocation()));
+            if(rc.canFireSingleShot()){
+                rc.fireSingleShot(rc.getLocation().directionTo(lowestHealthRobot.getLocation()));
+            }
+        }
+    }
+
+    public static void shootNearby() throws GameActionException {
+        RobotInfo[] enemyRobots = rc.senseNearbyRobots(-1, rc.getTeam().opponent());
+        if (enemyRobots.length > 0) {
+            if (rc.canFireSingleShot()) {
+                RobotInfo lowestHealthRobot = enemyRobots[0];
+                for (RobotInfo robot : enemyRobots) {
+                    if (lowestHealthRobot.health > robot.health) {
+                        lowestHealthRobot = robot;
+                    }
+                }
+                // ...Then fire a bullet in the direction of the enemy.
+                rc.fireSingleShot(rc.getLocation().directionTo(lowestHealthRobot.getLocation()));
+            }
+
         }
     }
 }

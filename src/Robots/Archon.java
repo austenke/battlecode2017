@@ -21,6 +21,32 @@ public class Archon {
     public static void run() throws GameActionException {
         // The code you want your robot to perform every round should be in this loop
         while (true) {
+            // Our team tank x location
+            rc.broadcast(0, -1);
+
+            // Our team tank y location
+            rc.broadcast(1, -1);
+
+            // Gardener count
+            rc.broadcast(2, -1);
+
+            // Tank x location
+            rc.broadcast(3, -1);
+
+            // Tank y location
+            rc.broadcast(4, -1);
+
+            // Soldier x location
+            rc.broadcast(5, -1);
+
+            // Soldier y location
+            rc.broadcast(6, -1);
+
+            // Gardener x location
+            rc.broadcast(7, -1);
+
+            // Gardener y location
+            rc.broadcast(8, -1);
 
             // Try/catch blocks stop unhandled exceptions, which cause your robot to explode
             try {
@@ -43,14 +69,6 @@ public class Archon {
                         rc.hireGardener(dir);
                 }
 
-                //tryMove(randomDirection());
-
-                // Broadcast archon's location for other robots on the team to know
-                /*MapLocation myLocation = rc.getLocation();
-                rc.broadcast(0,(int)myLocation.x);
-                rc.broadcast(1,(int)myLocation.y);*/
-
-                // Clock.yield() makes the robot wait until the next turn, then it will perform this loop again
                 Clock.yield();
 
             } catch (Exception e) {

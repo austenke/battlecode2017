@@ -4,6 +4,8 @@ import Helpers.HelperMethods;
 import Helpers.Movement;
 import battlecode.common.*;
 
+import java.util.ArrayList;
+
 /**
  * Class for scout robot
  */
@@ -22,7 +24,17 @@ public class Scout {
         // The code you want your robot to perform every round should be in this loop
         while (true) {
             try {
-                move.move();
+                MapLocation[] archons = rc.getInitialArchonLocations(rc.getTeam().opponent());
+                MapLocation myArchon = archons[0];
+
+                for (MapLocation archonLoc : archons) {
+                    if (rc.getLocation().distanceTo(myArchon) > rc.getLocation().distanceTo(archonLoc)) {
+                        myArchon = archonLoc;
+                    }
+                }
+
+                sense();
+                move.stayInLocationRange(myArchon, 10, 30);
                 Clock.yield();
             } catch (Exception e) {
                 System.out.println("Scout Exception");
@@ -31,12 +43,32 @@ public class Scout {
         }
     }
 
-    public static void detect() {
-        RobotInfo[] nearbyEnemies = rc.senseNearbyRobots(-1, rc.getTeam().opponent());
-        for (RobotInfo enemy : nearbyEnemies) {
-            for (RobotInfo linkedUnits : nearbyEnemies) {
+    public static void sense() throws GameActionException {
+        RobotInfo[] robots = rc.senseNearbyRobots();
+        TreeInfo[] enemyTrees = rc.senseNearbyTrees(-1, rc.getTeam().opponent());
 
+        for (RobotInfo robot : robots) {
+            if (robot.getType() == RobotType.TANK) {
+                // Broadcast to tank channels
+                rc.broadcast(3, (int) robot.getLocation().x);
+                rc.broadcast(4, (int) robot.getLocation().y);
             }
+            else if (robot.getType() == RobotType.SOLDIER) {
+                // Broadcast to soldier channels
+                rc.broadcast(5, (int) robot.getLocation().x);
+                rc.broadcast(6, (int) robot.getLocation().y);
+            }
+            else if (robot.getType() == RobotType.GARDENER) {
+                // Broadcast to gardener channels
+                rc.broadcast(7, (int) robot.getLocation().x);
+                rc.broadcast(8, (int) robot.getLocation().y);
+            }
+        }
+
+        if (enemyTrees.length > 0) {
+            // Broadcast to gardener channels
+            rc.broadcast(7, (int) enemyTrees[0].getLocation().x);
+            rc.broadcast(8, (int) enemyTrees[0].getLocation().y);
         }
     }
 }

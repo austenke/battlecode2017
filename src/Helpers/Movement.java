@@ -29,13 +29,50 @@ public class Movement {
             // Generate a list of all possible directions that can be moved to
             ArrayList<Direction> possibleDirections = tryDirs();
 
-            // Loop through list of possible directions to find one that will avoid contact with bullets
-            for (Direction dir : possibleDirections) {
-                MapLocation newLoc = rc.getLocation().add(dir, rc.getType().strideRadius);
-                if (bulletsCollideAtLoc(newLoc).size() == 0) {
-                    currentDir = dir;
-                    rc.move(currentDir);
-                    return;
+            // Generate a list of closest bullet distances
+            ArrayList<Float> bulletDists = new ArrayList<>();
+            // Generate a list of relevant directions
+            ArrayList<Direction> bulletDirs = new ArrayList<>();
+
+            // Check if there are possible moves, otherwise don't bother
+            if (possibleDirections.size() > 0) {
+                // Loop through list of possible directions to find one that will avoid contact with bullets
+                for (Direction dirToGo : possibleDirections) {
+                    MapLocation newLoc = rc.getLocation().add(dirToGo, rc.getType().strideRadius);
+                    ArrayList<Float> bulletsInPath = bulletsCollideAtLoc(newLoc);
+
+                    if (bulletsInPath.size() == 0) {
+                        // Unclear why, but canMove sometimes changes value over the course of this method
+                        if (rc.canMove(dirToGo)) {
+                            currentDir = dirToGo;
+                            rc.move(currentDir);
+                            return;
+                        }
+                    } else {
+                        // If there are bullets that will collide, add closest one to bulletDists
+                        bulletDists.add(bulletsInPath.get(0));
+                        bulletDirs.add(dirToGo);
+                    }
+                }
+
+                if (bulletDists.size() > 0) {
+                    // Every location has colliding bullets, so go to location with farthest away closest bullet
+                    float maxDist = 0;
+                    Direction farthestBulletDir = null;
+                    for (int i = 0; i < bulletDists.size(); i++) {
+                        float dist = bulletDists.get(i);
+                        Direction possibleDir = bulletDirs.get(i);
+                        if (dist > maxDist && rc.canMove(possibleDir)) {
+                            maxDist = dist;
+                            farthestBulletDir = possibleDir;
+                        }
+                    }
+
+                    if (farthestBulletDir != null) {
+                        rc.setIndicatorLine(rc.getLocation(), rc.getLocation().add(currentDir, 5), 235, 244, 66);
+                        currentDir = farthestBulletDir;
+                        rc.move(currentDir);
+                    }
                 }
             }
         }
@@ -75,34 +112,42 @@ public class Movement {
         return bulletDistances;
     }
 
+    /**
+     * Gather a list of all viable movements in as close a direction to the original dir as possible
+     */
     public static ArrayList<Direction> tryDirs() throws GameActionException {
         int checksPerSide = 9;
         float degreeOffset = 20;
 
-        return tryDirs(checksPerSide, degreeOffset);
-    }
-
-    /**
-     * Gather a list of all viable movements in as close a direction to the original dir as possible
-     */
-    public static ArrayList<Direction> tryDirs(int checksPerSide, float degreeOffset) throws GameActionException {
         ArrayList<Direction> availableDirs = new ArrayList<>();
 
         // Now try a bunch of similar angles
         int currentCheck = 1;
 
-        while(currentCheck<=checksPerSide) {
+        while(currentCheck <= checksPerSide) {
+            float toRotate = degreeOffset * currentCheck;
+            Direction rotateLeft = currentDir.rotateLeftDegrees(toRotate);
+            Direction rotateRight = currentDir.rotateRightDegrees(toRotate);
+
             // Try the offset of the left side
-            if(rc.canMove(currentDir.rotateLeftDegrees(degreeOffset*currentCheck))) {
-                Direction newDir = currentDir.rotateLeftDegrees(degreeOffset*currentCheck);
-                availableDirs.add(newDir);
+            if(rc.canMove(rotateLeft)) {
+                availableDirs.add(rotateLeft);
             }
+
             // Try the offset on the right side
-            if(rc.canMove(currentDir.rotateRightDegrees(degreeOffset*currentCheck))) {
-                Direction newDir = currentDir.rotateRightDegrees(degreeOffset*currentCheck);
-                availableDirs.add(newDir);
+            if(rc.canMove(rotateRight)) {
+                availableDirs.add(rotateRight);
             }
+
             currentCheck++;
+        }
+
+        for (Direction dir : availableDirs) {
+            if (rc.canMove(dir)) {
+            }
+            else {
+                System.out.println("can't move");
+            }
         }
 
         return availableDirs;
@@ -167,6 +212,7 @@ public class Movement {
             for (int i = 0; i < 5; i++) {
                 MapLocation newLoc = currentLoc.add(dirToLoc, rc.getType().strideRadius);
                 if (rc.isLocationOccupied(newLoc) && newLoc.distanceTo(loc) > 2) {
+                    // Path is occupied, just move normally
                     move();
                     return;
                 }
