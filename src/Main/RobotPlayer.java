@@ -19,7 +19,7 @@ public strictfp class RobotPlayer {
         // and to get information on its current status.
         RobotPlayer.rc = rc;
         helpers = new HelperMethods(rc);
-        initDirList(9);
+        initDirList(6);
 
         // Here, we've separated the controls into a different method for each RobotType.
         // You can add the missing ones or rewrite this into your own control structure.

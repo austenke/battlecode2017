@@ -57,7 +57,19 @@ public class Gardener {
                     minDist = 10;
                     maxDist = 20;
                 } else if (buildOrPlant == 1) {
-                    tryToPlant();
+                    int treeCount = rc.getTreeCount();
+                    if (treeCount < 2 || (rc.getRobotCount() > 4 && rc.getTreeCount() < 6)) {
+                        tryToPlant();
+                    }
+                    else {
+                        TreeInfo[] nearbyTrees = rc.senseNearbyTrees();
+                        if (nearbyTrees.length > 0) {
+                            if (!rc.hasMoved()) {
+                                move.stayInLocationRange(nearbyTrees[0].getLocation(), 0, 10);
+                            }
+                        }
+                    }
+
                     minDist = 0;
                     maxDist = 20;
                 }
@@ -149,9 +161,5 @@ public class Gardener {
                 }
             }
         }
-    }
-
-    public static boolean modGood(float number,float spacing, float fraction){
-        return (number%spacing)<spacing*fraction;
     }
 }
