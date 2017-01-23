@@ -57,7 +57,19 @@ public class Gardener {
                     minDist = 10;
                     maxDist = 20;
                 } else if (buildOrPlant == 1) {
-                    tryToPlant();
+                    int treeCount = rc.getTreeCount();
+                    if (treeCount < 2 || (rc.getRobotCount() > 4 && rc.getTreeCount() < 6)) {
+                        tryToPlant();
+                    }
+                    else {
+                        TreeInfo[] nearbyTrees = rc.senseNearbyTrees();
+                        if (nearbyTrees.length > 0) {
+                            if (!rc.hasMoved()) {
+                                move.stayInLocationRange(nearbyTrees[0].getLocation(), 0, 10);
+                            }
+                        }
+                    }
+
                     minDist = 0;
                     maxDist = 20;
                 }
@@ -140,7 +152,6 @@ public class Gardener {
         Direction[] dirList = RobotPlayer.getDirList();
         if(rc.getTeamBullets() > GameConstants.BULLET_TREE_COST) {
             for (int i = 0; i < dirList.length; i++) {
-                System.out.println("can plant");
                 //only plant trees on a sub-grid
                 MapLocation p = rc.getLocation().add(dirList[i],GameConstants.GENERAL_SPAWN_OFFSET+GameConstants.BULLET_TREE_RADIUS+rc.getType().bodyRadius);
                 if(modGood(p.x,6,0.2f)&&modGood(p.y,6,0.2f)) {

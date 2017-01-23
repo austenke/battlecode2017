@@ -1,9 +1,10 @@
 package Helpers;
 
-import Robots.Tank;
 import battlecode.common.*;
 
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 import java.util.Random;
 
 /**
@@ -23,19 +24,18 @@ public class Movement {
     public static void move() throws GameActionException {
         // If can move in current direction and will not run into bullets go there, else try other directions
         if (rc.canMove(currentDir) && bulletsCollideAtLoc(rc.getLocation().add(currentDir, rc.getType().strideRadius)).size() == 0) {
+            rc.setIndicatorLine(rc.getLocation(), rc.getLocation().add(currentDir, 5),66, 244, 92);
             rc.move(currentDir);
         }
         else {
             // Generate a list of all possible directions that can be moved to
             ArrayList<Direction> possibleDirections = tryDirs();
 
-            // Generate a list of closest bullet distances
-            ArrayList<Float> bulletDists = new ArrayList<>();
-            // Generate a list of relevant directions
-            ArrayList<Direction> bulletDirs = new ArrayList<>();
-
             // Check if there are possible moves, otherwise don't bother
             if (possibleDirections.size() > 0) {
+                int bulletsInPosCount = 0;
+                Direction safeDirToGo = possibleDirections.get(0);
+
                 // Loop through list of possible directions to find one that will avoid contact with bullets
                 for (Direction dirToGo : possibleDirections) {
                     MapLocation newLoc = rc.getLocation().add(dirToGo, rc.getType().strideRadius);
@@ -45,35 +45,20 @@ public class Movement {
                         // Unclear why, but canMove sometimes changes value over the course of this method
                         if (rc.canMove(dirToGo)) {
                             currentDir = dirToGo;
+                            rc.setIndicatorLine(rc.getLocation(), rc.getLocation().add(currentDir, 5),66, 244, 92);
                             rc.move(currentDir);
                             return;
                         }
-                    } else {
-                        // If there are bullets that will collide, add closest one to bulletDists
-                        bulletDists.add(bulletsInPath.get(0));
-                        bulletDirs.add(dirToGo);
                     }
-                }
-
-                if (bulletDists.size() > 0) {
-                    // Every location has colliding bullets, so go to location with farthest away closest bullet
-                    float maxDist = 0;
-                    Direction farthestBulletDir = null;
-                    for (int i = 0; i < bulletDists.size(); i++) {
-                        float dist = bulletDists.get(i);
-                        Direction possibleDir = bulletDirs.get(i);
-                        if (dist > maxDist && rc.canMove(possibleDir)) {
-                            maxDist = dist;
-                            farthestBulletDir = possibleDir;
+                    else {
+                        if (bulletsInPosCount > bulletsInPath.size() && rc.canMove(safeDirToGo)) {
+                            bulletsInPosCount = bulletsInPath.size();
+                            safeDirToGo = dirToGo;
                         }
                     }
-
-                    if (farthestBulletDir != null) {
-                        rc.setIndicatorLine(rc.getLocation(), rc.getLocation().add(currentDir, 5), 235, 244, 66);
-                        currentDir = farthestBulletDir;
-                        rc.move(currentDir);
-                    }
                 }
+
+                rc.move(safeDirToGo);
             }
         }
     }
@@ -112,6 +97,8 @@ public class Movement {
         return bulletDistances;
     }
 
+
+
     /**
      * Gather a list of all viable movements in as close a direction to the original dir as possible
      */
@@ -140,14 +127,6 @@ public class Movement {
             }
 
             currentCheck++;
-        }
-
-        for (Direction dir : availableDirs) {
-            if (rc.canMove(dir)) {
-            }
-            else {
-                System.out.println("can't move");
-            }
         }
 
         return availableDirs;
@@ -205,19 +184,20 @@ public class Movement {
             standingDodge();
         }
         else {
-            rc.setIndicatorLine(rc.getLocation(), loc, 244, 98, 66);
             Direction dirToLoc = rc.getLocation().directionTo(loc);
             MapLocation currentLoc = rc.getLocation();
-            // Loop 5 moves in advance, see if area is clear
-            for (int i = 0; i < 5; i++) {
+            // Loop 3 moves in advance, see if area is clear
+            for (int i = 0; i < 3; i++) {
                 MapLocation newLoc = currentLoc.add(dirToLoc, rc.getType().strideRadius);
-                if (rc.isLocationOccupied(newLoc) && newLoc.distanceTo(loc) > 2) {
+                if (rc.isLocationOccupied(newLoc) && newLoc.distanceTo(loc) > 3) {
+                    rc.setIndicatorLine(rc.getLocation(), loc, 244, 98, 66);
                     // Path is occupied, just move normally
                     move();
                     return;
                 }
             }
             // Area is clear, proceed with move
+            rc.setIndicatorLine(rc.getLocation(), loc, 66, 244, 244);
             currentDir = dirToLoc;
             move();
         }

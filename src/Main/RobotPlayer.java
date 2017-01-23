@@ -6,7 +6,7 @@ import Robots.*;
 public strictfp class RobotPlayer {
     static RobotController rc;
     static HelperMethods helpers;
-    static Direction[] dirList = new Direction[9];
+    static Direction[] dirList = new Direction[6];
 
     /**
      * run() is the method that is called when a robot is instantiated in the Battlecode world.
@@ -19,7 +19,7 @@ public strictfp class RobotPlayer {
         // and to get information on its current status.
         RobotPlayer.rc = rc;
         helpers = new HelperMethods(rc);
-        initDirList(9);
+        initDirList(6);
 
         // Here, we've separated the controls into a different method for each RobotType.
         // You can add the missing ones or rewrite this into your own control structure.
