@@ -5,6 +5,9 @@ import Helpers.Movement;
 import Main.RobotPlayer;
 import battlecode.common.*;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+
 /**
  * Class for gardener robot.
  */
@@ -13,6 +16,7 @@ public class Gardener {
     static HelperMethods helpers;
     static Movement move;
     static boolean watering;
+    static MapLocation myArchon;
 
     public Gardener(RobotController rc, HelperMethods helpers) {
         this.rc = rc;
@@ -35,7 +39,7 @@ public class Gardener {
         rc.broadcast(2,gardenerCount + 1);
 
         MapLocation[] archons = rc.getInitialArchonLocations(rc.getTeam());
-        MapLocation myArchon = archons[0];
+        myArchon = archons[0];
 
         for (MapLocation archonLoc : archons) {
             if (rc.getLocation().distanceTo(myArchon) > rc.getLocation().distanceTo(archonLoc)) {
@@ -43,39 +47,36 @@ public class Gardener {
             }
         }
 
+        MapLocation plantSpot = findGoodPlantSpot();
         // The code you want your robot to perform every round should be in this loop
         while (true) {
+            rc.setIndicatorDot(plantSpot, 244, 66, 66);
             // Try/catch blocks stop unhandled exceptions, which cause your robot to explode
             try {
                 int minDist = -1;
                 int maxDist = -1;
 
-                tryToWater();
-
                 if (buildOrPlant == 0) {
                     builderGardener();
-                    minDist = 10;
-                    maxDist = 20;
-                } else if (buildOrPlant == 1) {
-                    int treeCount = rc.getTreeCount();
-                    if (treeCount < 2 || (rc.getRobotCount() > 4 && rc.getTreeCount() < 6)) {
-                        tryToPlant();
+                    minDist = 0;
+                    maxDist = 10;
+
+                    if (!rc.hasMoved()) {
+                        move.stayInLocationRange(myArchon, minDist, maxDist);
                     }
-                    else {
-                        TreeInfo[] nearbyTrees = rc.senseNearbyTrees();
-                        if (nearbyTrees.length > 0) {
-                            if (!rc.hasMoved()) {
-                                move.stayInLocationRange(nearbyTrees[0].getLocation(), 0, 10);
-                            }
+                } else if (buildOrPlant == 1) {
+                    tryToWater();
+                    if (plantSpot != null) {
+                        if (rc.getLocation().distanceTo(plantSpot) < 2) {
+                            tryToPlant();
+                        }
+                        else {
+                            move.moveToLoc(plantSpot);
                         }
                     }
-
-                    minDist = 0;
-                    maxDist = 20;
-                }
-
-                if (!rc.hasMoved()) {
-                    move.stayInLocationRange(myArchon, minDist, maxDist);
+                    else {
+                        System.out.println("BIG ERROR");
+                    }
                 }
 
                 // Clock.yield() makes the robot wait until the next turn, then it will perform this loop again
@@ -142,8 +143,42 @@ public class Gardener {
         if (treeToWater != null) {
             if (rc.canWater(treeToWater.getLocation())) {
                 rc.water(treeToWater.getLocation());
-            } else {
-                move.moveToLoc(treeToWater.getLocation());
+            }
+        }
+    }
+
+    public static MapLocation findGoodPlantSpot() throws GameActionException {
+        MapLocation plantSpot = null;
+        MapLocation potentialPlantSpot = null;
+        int highestPlantCount = 0;
+        int attempts = 0;
+
+        int archonDist = rc.readBroadcast(9);
+        while(true) {
+            int plantCount = 0;
+            for (Direction dir : RobotPlayer.getDirList()) {
+                if (rc.canPlantTree(dir)) {
+                    plantCount++;
+                }
+            }
+
+            MapLocation myLoc = rc.getLocation();
+            if (plantCount > 3 && myLoc.distanceTo(myArchon) > archonDist) {
+                rc.readBroadcast(archonDist + 2);
+                return myLoc;
+            }
+            else if (attempts > 40) {
+                rc.readBroadcast(archonDist + 2);
+                return potentialPlantSpot;
+            }
+            else {
+                if (plantCount >= highestPlantCount) {
+                    highestPlantCount = plantCount;
+                    potentialPlantSpot = myLoc;
+                }
+                Movement.stayInLocationRange(myArchon, 0, 10);
+                attempts++;
+                Clock.yield();
             }
         }
     }
@@ -151,20 +186,11 @@ public class Gardener {
     public static void tryToPlant() throws GameActionException {
         Direction[] dirList = RobotPlayer.getDirList();
         if(rc.getTeamBullets() > GameConstants.BULLET_TREE_COST) {
-            for (int i = 0; i < dirList.length; i++) {
-                //only plant trees on a sub-grid
-                MapLocation p = rc.getLocation().add(dirList[i],GameConstants.GENERAL_SPAWN_OFFSET+GameConstants.BULLET_TREE_RADIUS+rc.getType().bodyRadius);
-                if(modGood(p.x,6,0.2f)&&modGood(p.y,6,0.2f)) {
-                    if (rc.canPlantTree(dirList[i])) {
-                        rc.plantTree(dirList[i]);
-                        return;
-                    }
+            for (Direction dir : dirList) {
+                if (rc.canPlantTree(dir)) {
+                    rc.plantTree(dir);
                 }
             }
         }
-    }
-
-    public static boolean modGood(float number,float spacing, float fraction){
-        return (number%spacing)<spacing*fraction;
     }
 }
