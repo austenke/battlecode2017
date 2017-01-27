@@ -1,5 +1,6 @@
 package Robots;
 
+import Main.RobotPlayer;
 import battlecode.common.*;
 import Helpers.HelperMethods;
 import Helpers.Movement;
@@ -8,14 +9,12 @@ import Helpers.Movement;
  * Class for soldier robot.
  */
 public class Soldier {
-    static RobotController rc;
-    static HelperMethods helpers;
+    static RobotController rc = RobotPlayer.rc;
+    static HelperMethods helpers = RobotPlayer.helpers;
     static Movement move;
 
-    public Soldier(RobotController rc, HelperMethods helpers) {
-        this.rc = rc;
-        this.helpers = helpers;
-        this.move = new Movement(rc);
+    public Soldier() {
+        this.move = new Movement();
     }
 
     public static void run() throws GameActionException {

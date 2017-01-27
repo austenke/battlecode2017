@@ -10,12 +10,11 @@ import static Helpers.HelperMethods.randomDirection;
  * Class for archon robot.
  */
 public class Archon {
-    static RobotController rc;
-    static HelperMethods helpers;
+    static RobotController rc = RobotPlayer.rc;
+    static HelperMethods helpers = RobotPlayer.helpers;
 
-    public Archon(RobotController rc, HelperMethods helpers) {
-        this.rc = rc;
-        this.helpers = helpers;
+    public Archon() {
+
     }
 
     public static void run() throws GameActionException {
@@ -53,28 +52,46 @@ public class Archon {
         while (true) {
             // Try/catch blocks stop unhandled exceptions, which cause your robot to explode
             try {
-                // Generate a random direction
-                Direction[] dirList = RobotPlayer.getDirList();
-                Direction dir = dirList[0];
+                // Gardener cost
+                if (rc.getTeamBullets() > 100) {
+                    // Generate a random direction
+                    Direction[] dirList = RobotPlayer.getDirList();
+                    Direction dir = dirList[0];
 
-                for(Direction d : dirList){
-                    if(rc.canBuildRobot(RobotType.GARDENER,d)){
-                        dir = d;
-                        break;
+                    MapLocation[] enemyArchs = rc.getInitialArchonLocations(rc.getTeam().opponent());
+
+                    float dirToEnemyArchon = 9999;
+                    Direction bestDir = null;
+
+                    for (Direction d : dirList) {
+                        rc.setIndicatorLine(rc.getLocation(), rc.getLocation().add(d, 5), 104, 244, 66);
+                        if (rc.canHireGardener(d)) {
+                            float dirTo = Math.abs(d.radiansBetween(rc.getLocation().directionTo(enemyArchs[0])));
+                            if (dirTo < dirToEnemyArchon) {
+                                bestDir = d;
+                                dirToEnemyArchon = dirTo;
+                            }
+                        }
                     }
-                }
 
-                int numArchons = rc.getInitialArchonLocations(rc.getTeam()).length;
-                if (rc.getRobotCount() < 10) {
-                    if (rc.canHireGardener(dir) && (rc.getRobotCount() == numArchons || rc.getRobotCount() == numArchons + 1 || rc.getRobotCount() == numArchons + 3 || rc.getRobotCount() == numArchons + 5 || rc.getRobotCount() == numArchons + 7)) {
+                    rc.setIndicatorLine(rc.getLocation(), rc.getLocation().add(bestDir, 10), 66, 134, 244);
+
+                    dir = bestDir;
+
+                    if (dir == null) {
+                        dir = dirList[0];
+                    }
+
+                    int numArchons = rc.getInitialArchonLocations(rc.getTeam()).length;
+                    if (rc.getRobotCount() < 10) {
+                        if (rc.canHireGardener(dir) && (rc.getRobotCount() == numArchons || rc.getRobotCount() == numArchons + 1 || rc.getRobotCount() == numArchons + 3 || rc.getRobotCount() == numArchons + 5 || rc.getRobotCount() == numArchons + 7)) {
+                            rc.hireGardener(dir);
+                        }
+                    } else if (rc.getRobotCount() % 5 == 4 && rc.canHireGardener(dir)) {
                         rc.hireGardener(dir);
                     }
-                }else if (rc.getRobotCount() % 5 == 4 && rc.canHireGardener(dir)){
-                        rc.hireGardener(dir);
                 }
-
                 Clock.yield();
-
             } catch (Exception e) {
                 System.out.println("Archon Exception");
                 e.printStackTrace();

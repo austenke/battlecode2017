@@ -12,16 +12,14 @@ import java.util.HashMap;
  * Class for gardener robot.
  */
 public class Gardener {
-    static RobotController rc;
-    static HelperMethods helpers;
+    static RobotController rc = RobotPlayer.rc;
+    static HelperMethods helpers = RobotPlayer.helpers;
     static Movement move;
     static boolean watering;
     static MapLocation myArchon;
 
-    public Gardener(RobotController rc, HelperMethods helpers) {
-        this.rc = rc;
-        this.helpers = helpers;
-        this.move = new Movement(rc);
+    public Gardener() {
+        this.move = new Movement();
         this.watering = false;
     }
 
@@ -47,10 +45,13 @@ public class Gardener {
             }
         }
 
-        MapLocation plantSpot = findGoodPlantSpot();
+        MapLocation plantSpot = null;
+
+        if (buildOrPlant == 1) {
+            plantSpot = findGoodPlantSpot();
+        }
         // The code you want your robot to perform every round should be in this loop
         while (true) {
-            rc.setIndicatorDot(plantSpot, 244, 66, 66);
             // Try/catch blocks stop unhandled exceptions, which cause your robot to explode
             try {
                 int minDist = -1;
@@ -58,13 +59,14 @@ public class Gardener {
 
                 if (buildOrPlant == 0) {
                     builderGardener();
-                    minDist = 0;
-                    maxDist = 10;
+                    minDist = 6;
+                    maxDist = 12;
 
                     if (!rc.hasMoved()) {
                         move.stayInLocationRange(myArchon, minDist, maxDist);
                     }
                 } else if (buildOrPlant == 1) {
+                    rc.setIndicatorDot(plantSpot, 244, 66, 66);
                     tryToWater();
                     if (plantSpot != null) {
                         if (rc.getLocation().distanceTo(plantSpot) < 2) {
@@ -164,11 +166,11 @@ public class Gardener {
 
             MapLocation myLoc = rc.getLocation();
             if (plantCount > 3 && myLoc.distanceTo(myArchon) > archonDist) {
-                rc.readBroadcast(archonDist + 2);
+                rc.broadcast(9, archonDist + 4);
                 return myLoc;
             }
-            else if (attempts > 40) {
-                rc.readBroadcast(archonDist + 2);
+            else if (attempts > 30 && potentialPlantSpot.distanceTo(myArchon) > archonDist) {
+                rc.broadcast(9, archonDist + 4);
                 return potentialPlantSpot;
             }
             else {
@@ -176,7 +178,7 @@ public class Gardener {
                     highestPlantCount = plantCount;
                     potentialPlantSpot = myLoc;
                 }
-                Movement.stayInLocationRange(myArchon, 0, 10);
+                Movement.stayInLocationRange(myArchon, 6, 80);
                 attempts++;
                 Clock.yield();
             }

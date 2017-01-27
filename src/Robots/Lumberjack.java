@@ -2,20 +2,19 @@ package Robots;
 
 import Helpers.HelperMethods;
 import Helpers.Movement;
+import Main.RobotPlayer;
 import battlecode.common.*;
 
 /**
  * Class for lumberjack robot.
  */
 public class Lumberjack {
-    static RobotController rc;
-    static HelperMethods helpers;
+    static RobotController rc = RobotPlayer.rc;
+    static HelperMethods helpers = RobotPlayer.helpers;
     static Movement move;
 
-    public Lumberjack(RobotController rc, HelperMethods helpers) {
-        this.rc = rc;
-        this.helpers = helpers;
-        this.move = new Movement(rc);
+    public Lumberjack() {
+        this.move = new Movement();
     }
 
     public static void run() throws GameActionException {

@@ -2,6 +2,7 @@ package Robots;
 
 import Helpers.HelperMethods;
 import Helpers.Movement;
+import Main.RobotPlayer;
 import battlecode.common.*;
 
 import java.util.ArrayList;
@@ -10,14 +11,12 @@ import java.util.ArrayList;
  * Class for scout robot
  */
 public class Scout {
-    static RobotController rc;
-    static HelperMethods helpers;
+    static RobotController rc = RobotPlayer.rc;
+    static HelperMethods helpers = RobotPlayer.helpers;
     static Movement move;
 
-    public Scout(RobotController rc, HelperMethods helpers) {
-        this.rc = rc;
-        this.helpers = helpers;
-        this.move = new Movement(rc);
+    public Scout() {
+        this.move = new Movement();
     }
 
     public static void run() throws GameActionException {

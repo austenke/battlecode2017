@@ -4,8 +4,8 @@ import Helpers.HelperMethods;
 import Robots.*;
 
 public strictfp class RobotPlayer {
-    static RobotController rc;
-    static HelperMethods helpers;
+    public static RobotController rc;
+    public static HelperMethods helpers;
     static Direction[] dirList = new Direction[6];
 
     /**
@@ -25,22 +25,22 @@ public strictfp class RobotPlayer {
         // You can add the missing ones or rewrite this into your own control structure.
         switch (rc.getType()) {
             case ARCHON:
-                new Archon(rc, helpers).run();
+                new Archon().run();
                 break;
             case GARDENER:
-                new Gardener(rc, helpers).run();
+                new Gardener().run();
                 break;
             case SOLDIER:
-                new Soldier(rc, helpers).run();
+                new Soldier().run();
                 break;
             case LUMBERJACK:
-                new Lumberjack(rc, helpers).run();
+                new Lumberjack().run();
                 break;
             case TANK:
-                new Tank(rc, helpers).run();
+                new Tank().run();
                 break;
             case SCOUT:
-                new Scout(rc, helpers).run();
+                new Scout().run();
                 break;
         }
 	}
