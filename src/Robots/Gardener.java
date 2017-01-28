@@ -66,9 +66,9 @@ public class Gardener {
                         move.stayInLocationRange(myArchon, minDist, maxDist);
                     }
                 } else if (buildOrPlant == 1) {
-                    rc.setIndicatorDot(plantSpot, 244, 66, 66);
                     tryToWater();
                     if (plantSpot != null) {
+                        rc.setIndicatorDot(plantSpot, 244, 66, 66);
                         if (rc.getLocation().distanceTo(plantSpot) < 2) {
                             tryToPlant();
                         }
