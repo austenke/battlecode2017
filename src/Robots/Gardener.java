@@ -169,12 +169,12 @@ public class Gardener {
                 rc.broadcast(9, archonDist + 4);
                 return myLoc;
             }
-            else if (attempts > 30 && potentialPlantSpot.distanceTo(myArchon) > archonDist) {
+            else if (attempts > 30) {
                 rc.broadcast(9, archonDist + 4);
                 return potentialPlantSpot;
             }
             else {
-                if (plantCount >= highestPlantCount) {
+                if (plantCount >= highestPlantCount && myLoc.distanceTo(myArchon) > archonDist) {
                     highestPlantCount = plantCount;
                     potentialPlantSpot = myLoc;
                 }
