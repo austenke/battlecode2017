@@ -77,7 +77,7 @@ public class Gardener {
                         }
                     }
                     else {
-                        System.out.println("BIG ERROR");
+                        buildOrPlant = 0;
                     }
                 }
 
@@ -170,7 +170,7 @@ public class Gardener {
                 return myLoc;
             }
             else if (attempts > 30) {
-                rc.broadcast(9, archonDist + 4);
+                rc.broadcast(9, archonDist + 3);
                 return potentialPlantSpot;
             }
             else {
