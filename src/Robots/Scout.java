@@ -12,34 +12,72 @@ import java.util.ArrayList;
  */
 public class Scout {
     static RobotController rc = RobotPlayer.rc;
-    static HelperMethods helpers = RobotPlayer.helpers;
     static Movement move;
+
 
     public Scout() {
         this.move = new Movement();
     }
 
     public static void run() throws GameActionException {
+        int scoutCount = rc.readBroadcast(10);
+        boolean goShake = false;
+
+        if (scoutCount < 2) {
+            goShake = true;
+            rc.broadcast(10, scoutCount + 1);
+        }
+
+        ArrayList<Integer> alreadyShook = new ArrayList<>();
+        MapLocation[] archons = rc.getInitialArchonLocations(rc.getTeam().opponent());
+        MapLocation myArchon = archons[0];
+
+        for (MapLocation archonLoc : archons) {
+            if (rc.getLocation().distanceTo(myArchon) > rc.getLocation().distanceTo(archonLoc)) {
+                myArchon = archonLoc;
+            }
+        }
+
         // The code you want your robot to perform every round should be in this loop
         while (true) {
             try {
-                MapLocation[] archons = rc.getInitialArchonLocations(rc.getTeam().opponent());
-                MapLocation myArchon = archons[0];
-
-                for (MapLocation archonLoc : archons) {
-                    if (rc.getLocation().distanceTo(myArchon) > rc.getLocation().distanceTo(archonLoc)) {
-                        myArchon = archonLoc;
-                    }
+                if (goShake) {
+                    shakeTrees(myArchon, alreadyShook);
                 }
-
-                sense();
-                move.stayInLocationRange(myArchon, 10, 30);
+                else {
+                    sense();
+                    move.stayInLocationRange(myArchon, 10, 30);
+                }
                 Clock.yield();
             } catch (Exception e) {
                 System.out.println("Scout Exception");
                 e.printStackTrace();
             }
+
         }
+    }
+
+    public static void shakeTrees(MapLocation myArchon, ArrayList<Integer> alreadyShook) throws GameActionException {
+        TreeInfo[] trees = rc.senseNearbyTrees();
+
+        if (trees.length > 0) {
+            for (TreeInfo tree : trees) {
+                int treeId = tree.getID();
+                if (!alreadyShook.contains(treeId)) {
+                    if (rc.canShake(treeId)) {
+                        rc.shake(treeId);
+                        alreadyShook.add(treeId);
+                    }
+                    else {
+                        rc.setIndicatorDot(tree.getLocation(), 66, 134, 244);
+                        move.moveToLoc(tree.getLocation());
+                    }
+                    return;
+                }
+            }
+        }
+
+        move.stayInLocationRange(myArchon, 0, 100);
     }
 
     public static void sense() throws GameActionException {
