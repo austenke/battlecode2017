@@ -18,6 +18,15 @@ public class Lumberjack {
     }
 
     public static void run() throws GameActionException {
+        MapLocation[] archons = rc.getInitialArchonLocations(rc.getTeam());
+        MapLocation myArchon = archons[0];
+
+        for (MapLocation archonLoc : archons) {
+            if (rc.getLocation().distanceTo(myArchon) > rc.getLocation().distanceTo(archonLoc)) {
+                myArchon = archonLoc;
+            }
+        }
+
         while (true) {
             try {
                 RobotInfo[] bots = rc.senseNearbyRobots();
@@ -25,7 +34,7 @@ public class Lumberjack {
                     if (b.getTeam() != rc.getTeam() && rc.canStrike()) {
                         rc.strike();
                         Direction chase = rc.getLocation().directionTo(b.getLocation());
-                        if (rc.canMove(chase)) {
+                        if (rc.canMove(chase) && rc.getLocation().distanceTo(myArchon) < 50) {
                             rc.move(chase);
                         }
                         break;
@@ -39,7 +48,7 @@ public class Lumberjack {
                     }
                 }
                 if (! rc.hasAttacked()) {
-                    move.move();
+                    move.stayInLocationRange(myArchon, 5, 40);
                 }
                 Clock.yield();
             } catch (Exception e) {
