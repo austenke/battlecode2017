@@ -57,6 +57,8 @@ public class Archon {
         // Scout count
         rc.broadcast(10, 0);
 
+        Direction[] dirList = RobotPlayer.getDirList();
+
         // The code you want your robot to perform every round should be in this loop
         while (true) {
             // Try/catch blocks stop unhandled exceptions, which cause your robot to explode

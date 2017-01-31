@@ -127,11 +127,15 @@ public class Economy {
 
                     if (dir == null) {
                         dir = dirList[0];
+                        if (dirList.length < 10) {
+                            dirList = RobotPlayer.initDirList(20);
+                        }
                     }
-
-                    rc.hireGardener(dir);
-                    shitBuilt++;
-                    rc.broadcast(12 * myArchon, numBots + 1);
+                    if(rc.canHireGardener(dir)){
+                        rc.hireGardener(dir);
+                        shitBuilt++;
+                        rc.broadcast(12 * myArchon, numBots + 1);
+                    }
                 }
         } catch (GameActionException e) {
             e.printStackTrace();

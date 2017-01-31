@@ -45,9 +45,18 @@ public class Scout {
                     shakeTrees(myArchon, alreadyShook);
                 }
                 else {
-                    sense();
-                    move.stayInLocationRange(myArchon, 10, 30);
+                    RobotInfo[] robots = rc.senseNearbyRobots(-1, rc.getTeam().opponent());
+                    if (robots.length > 0) {
+                        if (robots[0].getLocation().distanceTo(rc.getLocation()) < rc.getType().sensorRadius - 4) {
+                            move.moveToLoc(myArchon);
+                        }
+                    }
+
+                    if (!rc.hasMoved()) {
+                        move.move();
+                    }
                 }
+                sense();
                 Clock.yield();
             } catch (Exception e) {
                 System.out.println("Scout Exception");
@@ -81,7 +90,7 @@ public class Scout {
     }
 
     public static void sense() throws GameActionException {
-        RobotInfo[] robots = rc.senseNearbyRobots();
+        RobotInfo[] robots = rc.senseNearbyRobots(-1, rc.getTeam().opponent());
         TreeInfo[] enemyTrees = rc.senseNearbyTrees(-1, rc.getTeam().opponent());
 
         for (RobotInfo robot : robots) {

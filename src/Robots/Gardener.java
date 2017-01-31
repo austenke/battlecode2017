@@ -110,10 +110,10 @@ public class Gardener {
 
             MapLocation myLoc = rc.getLocation();
             if (plantCount > 3 && myLoc.distanceTo(myArchon) > archonDist) {
-                rc.broadcast(9, archonDist + 4);
+                rc.broadcast(9, archonDist + 3);
                 return myLoc;
             }
-            else if (attempts > 30) {
+            else if (attempts > 20) {
                 rc.broadcast(9, archonDist + 3);
                 return potentialPlantSpot;
             }
@@ -122,7 +122,7 @@ public class Gardener {
                     highestPlantCount = plantCount;
                     potentialPlantSpot = myLoc;
                 }
-                Movement.stayInLocationRange(myArchon, 6, 80);
+                Movement.stayInLocationRange(myArchon, 6, 70);
                 attempts++;
                 Clock.yield();
             }
