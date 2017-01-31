@@ -1,6 +1,5 @@
 package Robots;
 
-import Helpers.HelperMethods;
 import Helpers.Movement;
 import Main.RobotPlayer;
 import battlecode.common.*;
@@ -10,7 +9,6 @@ import battlecode.common.*;
  */
 public class Lumberjack {
     static RobotController rc = RobotPlayer.rc;
-    static HelperMethods helpers = RobotPlayer.helpers;
     static Movement move;
 
     public Lumberjack() {

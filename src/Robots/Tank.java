@@ -1,13 +1,11 @@
 package Robots;
 
-import Helpers.HelperMethods;
 import Helpers.Movement;
 import Main.RobotPlayer;
 import battlecode.common.*;
 
 public class Tank {
     static RobotController rc = RobotPlayer.rc;
-    static HelperMethods helpers = RobotPlayer.helpers;
     static Movement move;
 
     public Tank() {

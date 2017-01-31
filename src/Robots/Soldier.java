@@ -2,7 +2,6 @@ package Robots;
 
 import Main.RobotPlayer;
 import battlecode.common.*;
-import Helpers.HelperMethods;
 import Helpers.Movement;
 
 /**
@@ -10,7 +9,6 @@ import Helpers.Movement;
  */
 public class Soldier {
     static RobotController rc = RobotPlayer.rc;
-    static HelperMethods helpers = RobotPlayer.helpers;
     static Movement move;
 
     public Soldier() {
