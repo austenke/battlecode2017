@@ -152,9 +152,6 @@ public class Tank {
                 }
 
                 tempScore = tempScore - (int) (robot.getHealth() / robot.getType().maxHealth) * 30;
-                System.out.println(robot.getType());
-                System.out.println(tempScore);
-                System.out.println((robot.getHealth() / robot.getType().maxHealth));
 
                 if (tempScore > targetScore) {
                     targetScore = tempScore;
@@ -173,8 +170,6 @@ public class Tank {
         TreeInfo[] enemyTrees = rc.senseNearbyTrees(-1, rc.getTeam().opponent());
 
         RobotInfo target = findTarget(enemyRobots);
-
-        System.out.println(target);
 
         if (target != null) {
             Direction enemyDir = rc.getLocation().directionTo(target.getLocation());

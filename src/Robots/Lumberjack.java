@@ -32,18 +32,7 @@ public class Lumberjack {
                 boolean action = false;
                 RobotInfo[] bots = rc.senseNearbyRobots(-1, rc.getTeam().opponent());
                 TreeInfo[] trees = rc.senseNearbyTrees();
-                if (bots.length > 0 && rc.canStrike()) {
-                    if (rc.getLocation().distanceTo(myArchon) < 50) {
-                        move.moveToLoc(bots[0].getLocation());
-                        action = true;
-                    }
-
-                    if (rc.getLocation().distanceTo(bots[0].getLocation()) < GameConstants.LUMBERJACK_STRIKE_RADIUS) {
-                        rc.strike();
-                        action = true;
-                    }
-                }
-                else if (trees.length > 0) {
+                if (trees.length > 0) {
                     for (TreeInfo t : trees) {
                         if (t.getTeam() != rc.getTeam()) {
                             if (rc.canChop(t.getLocation())) {
@@ -55,6 +44,15 @@ public class Lumberjack {
                             break;
                         }
                     }
+                }
+                else if (bots.length > 0 && rc.getLocation().distanceTo(bots[0].getLocation()) < 3 && rc.canStrike()) {
+                    if (rc.getLocation().distanceTo(bots[0].getLocation()) <= 2) {
+                        rc.strike();
+                    }
+                    else {
+                        move.moveToLoc(bots[0].getLocation());
+                    }
+                    action = true;
                 }
 
                 if (!action) {
