@@ -19,8 +19,10 @@ public class Gardener {
     static boolean watering;
     static MapLocation myArchon;
     static Economy econ;
+    static boolean builder;
 
     public Gardener() {
+
         this.move = new Movement();
         this.watering = false;
         this.econ = new Economy(rc);
@@ -46,8 +48,9 @@ public class Gardener {
             try {
                 if(plantSpot != null){
                     if(rc.getLocation().distanceTo(plantSpot) < 2){
-                        tryToWater();
                         econ.build();
+                        tryToWater();
+
                     }
                     else{
                         move.moveToLoc(plantSpot);

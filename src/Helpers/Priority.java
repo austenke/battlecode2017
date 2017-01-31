@@ -1,10 +1,11 @@
 package Helpers;
 
 import battlecode.common.*;
+import java.util.Comparator;
 
 import java.awt.*;
 
-public class Priority {
+public class Priority implements Comparable<Priority>{
     static int priority;
     static RobotType type;
     static boolean isTree;
@@ -29,5 +30,9 @@ public class Priority {
 
     public static boolean isTree(){
         return isTree;
+    }
+
+    public int compareTo(Priority p){
+        return this.getPriority() - p.getPriority();
     }
 }

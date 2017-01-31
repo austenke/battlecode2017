@@ -8,6 +8,14 @@ import java.util.PriorityQueue;
  */
 public class PriorityComparator implements Comparator <Priority>{
     public int compare(Priority p1, Priority p2){
-       return p1.getPriority() - p2.getPriority();
+       if(p1.getPriority() > p2.getPriority()){
+           return -1;
+       }
+       else if(p1.getPriority() == p2.getPriority()){
+            return 0;
+       }
+       else {
+           return 1;
+       }
     }
 }
