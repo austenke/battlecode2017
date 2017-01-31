@@ -55,6 +55,17 @@ public class Gardener {
                     }
                 }
 
+                BulletInfo[] bullets = rc.senseNearbyBullets();
+
+                for (BulletInfo bullet : bullets) {
+                    if (move.willCollideWithMe(rc.getLocation(), bullet)) {
+                        // If enemy robots are nearby cry for help
+                        rc.broadcast(16, (int) rc.getLocation().x);
+                        rc.broadcast(17, (int) rc.getLocation().y);
+                        break;
+                    }
+                }
+
                 // Clock.yield() makes the robot wait until the next turn, then it will perform this loop again
                 Clock.yield();
 
