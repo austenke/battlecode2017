@@ -81,6 +81,10 @@ public class Movement {
 
         ArrayList<Direction> availableDirs = new ArrayList<>();
 
+        if (rc.canMove(currentDir)) {
+            availableDirs.add(currentDir);
+        }
+
         // Now try a bunch of similar angles
         int currentCheck = 1;
 
@@ -175,7 +179,7 @@ public class Movement {
                 for (BulletInfo bullet : bullets) {
                     if (collisionCount > 4) {
                         break;
-                    } else if (willCollideWithMe(loc, bullet)) {
+                    } else if (willCollideWithMe(loc, bullet) || loc.distanceTo(bullet.getLocation()) < 1) {
                         // Since we will round curScore later, make this number larger and guarantee it is at least 1
                         curScore += ((bullet.damage / loc.distanceTo(bullet.getLocation())) + 1) * 15;
                         collisionCount++;

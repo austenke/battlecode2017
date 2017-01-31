@@ -29,24 +29,39 @@ public class Lumberjack {
 
         while (true) {
             try {
-                RobotInfo[] bots = rc.senseNearbyRobots();
-                for (RobotInfo b : bots) {
-                    if (b.getTeam() != rc.getTeam() && rc.canStrike()) {
-                        rc.strike();
-                        if (rc.getLocation().distanceTo(myArchon) < 50) {
-                            move.moveToLoc(b.getLocation());
+                boolean action = false;
+                RobotInfo[] bots = rc.senseNearbyRobots(-1, rc.getTeam().opponent());
+                TreeInfo[] trees = rc.senseNearbyTrees();
+                if (bots.length > 0 && rc.canStrike()) {
+                    for (RobotInfo b : bots) {
+                        if (rc.getLocation().distanceTo(b.getLocation()) <= GameConstants.LUMBERJACK_STRIKE_RADIUS) {
+                            rc.strike();
+                            action = true;
+                        }
+                        else {
+                            if (rc.getLocation().distanceTo(myArchon) < 50) {
+                                move.moveToLoc(b.getLocation());
+                                action = true;
+                            }
                         }
                         break;
                     }
                 }
-                TreeInfo[] trees = rc.senseNearbyTrees();
-                for (TreeInfo t : trees) {
-                    if (rc.canChop(t.getLocation()) && t.getTeam() != rc.getTeam()) {
-                        rc.chop(t.getLocation());
-                        break;
+                else if (trees.length > 0) {
+                    for (TreeInfo t : trees) {
+                        if (t.getTeam() != rc.getTeam()) {
+                            if (rc.canChop(t.getLocation())) {
+                                rc.chop(t.getLocation());
+                            } else {
+                                move.moveToLoc(t.getLocation());
+                            }
+                            action = true;
+                            break;
+                        }
                     }
                 }
-                if (! rc.hasAttacked()) {
+
+                if (!action) {
                     move.stayInLocationRange(myArchon, 5, 40);
                 }
                 Clock.yield();

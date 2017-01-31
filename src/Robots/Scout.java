@@ -67,7 +67,7 @@ public class Scout {
     }
 
     public static void shakeTrees(MapLocation myArchon, ArrayList<Integer> alreadyShook) throws GameActionException {
-        TreeInfo[] trees = rc.senseNearbyTrees();
+        TreeInfo[] trees = rc.senseNearbyTrees(-1, Team.NEUTRAL);
 
         if (trees.length > 0) {
             for (TreeInfo tree : trees) {
