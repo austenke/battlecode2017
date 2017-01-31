@@ -1,5 +1,6 @@
 package Robots;
 
+import Helpers.Economy;
 import Helpers.HelperMethods;
 import Main.RobotPlayer;
 import battlecode.common.*;
@@ -12,13 +13,16 @@ import static Helpers.HelperMethods.randomDirection;
 public class Archon {
     static RobotController rc;
     static HelperMethods helpers;
+    static Economy econ;
 
     public Archon(RobotController rc, HelperMethods helpers) {
         this.rc = rc;
         this.helpers = helpers;
+        this.econ = new Economy(rc);
     }
 
     public static void run() throws GameActionException {
+        econ.build();
         // Our team tank x location
         rc.broadcast(0, -1);
 
@@ -26,7 +30,7 @@ public class Archon {
         rc.broadcast(1, -1);
 
         // Gardener count
-        rc.broadcast(2, -1);
+        rc.broadcast(2, 0);
 
         // Tank x location
         rc.broadcast(3, -1);
@@ -53,25 +57,7 @@ public class Archon {
         while (true) {
             // Try/catch blocks stop unhandled exceptions, which cause your robot to explode
             try {
-                // Generate a random direction
-                Direction[] dirList = RobotPlayer.getDirList();
-                Direction dir = dirList[0];
-
-                for(Direction d : dirList){
-                    if(rc.canBuildRobot(RobotType.GARDENER,d)){
-                        dir = d;
-                        break;
-                    }
-                }
-
-                int numArchons = rc.getInitialArchonLocations(rc.getTeam()).length;
-                if (rc.getRobotCount() < 10) {
-                    if (rc.canHireGardener(dir) && (rc.getRobotCount() == numArchons || rc.getRobotCount() == numArchons + 1 || rc.getRobotCount() == numArchons + 3 || rc.getRobotCount() == numArchons + 5 || rc.getRobotCount() == numArchons + 7)) {
-                        rc.hireGardener(dir);
-                    }
-                }else if (rc.getRobotCount() % 5 == 4 && rc.canHireGardener(dir)){
-                        rc.hireGardener(dir);
-                }
+                econ.build();
 
                 Clock.yield();
 
