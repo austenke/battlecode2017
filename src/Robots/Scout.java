@@ -1,6 +1,5 @@
 package Robots;
 
-import Helpers.HelperMethods;
 import Helpers.Movement;
 import Main.RobotPlayer;
 import battlecode.common.*;

@@ -2,7 +2,6 @@ package Robots;
 
 import Main.RobotPlayer;
 import battlecode.common.*;
-import Helpers.HelperMethods;
 import Helpers.Movement;
 
 /**
@@ -10,7 +9,6 @@ import Helpers.Movement;
  */
 public class Soldier {
     static RobotController rc = RobotPlayer.rc;
-    static HelperMethods helpers = RobotPlayer.helpers;
     static Movement move;
 
     public Soldier() {
@@ -152,7 +150,9 @@ public class Soldier {
                                 (int) rc.getType().sensorRadius - 3, (int) rc.getType().sensorRadius - 1);
                     }
                     else {
-                        move.move();
+                        // If can't find anything, just stay in enemy area
+                        MapLocation[] enemyArchons = rc.getInitialArchonLocations(rc.getTeam().opponent());
+                        move.stayInLocationRange(enemyArchons[0], 0, 30);
                     }
                 }
                 Clock.yield();
@@ -171,7 +171,29 @@ public class Soldier {
     static void defenseSoldier(MapLocation myArchon) throws GameActionException {
         RobotInfo[] enemyRobots = rc.senseNearbyRobots(-1, rc.getTeam().opponent());
 
-        move.stayInLocationRange(myArchon, 0, 20);
+        int cryForHelpX = rc.readBroadcast(16);
+        int cryForHelpY = rc.readBroadcast(17);
+
+        if (cryForHelpX == -1 || cryForHelpY == -1) {
+            move.stayInLocationRange(myArchon, 0, 20);
+        }
+        else {
+            MapLocation cryForHelp = new MapLocation(cryForHelpX, cryForHelpY);
+            if (rc.getLocation().distanceTo(cryForHelp) < 5) {
+                if (enemyRobots.length == 0) {
+                    // No enemy robots nearby, clear cry for help channel
+                    rc.broadcast(16, -1);
+                    rc.broadcast(17, -1);
+                    move.stayInLocationRange(myArchon, 0, 20);
+                }
+                else {
+                    move.stayInLocationRange(cryForHelp, 0, 5);
+                }
+            }
+            else {
+                move.tankMoveToLoc(cryForHelp);
+            }
+        }
 
         if (enemyRobots.length != 0) {
             RobotInfo lowestHealthRobot = enemyRobots[0];
@@ -200,6 +222,9 @@ public class Soldier {
                 switch (robot.getType()) {
                     case TANK:
                         tempScore += 1000;
+                        break;
+                    case ARCHON:
+                        tempScore += 500;
                         break;
                     case SOLDIER:
                         tempScore += 110;
@@ -236,8 +261,6 @@ public class Soldier {
         RobotInfo target = findTarget(enemyRobots);
 
         if (target != null) {
-            rc.setIndicatorLine(rc.getLocation(), target.getLocation(), 244, 66, 66);
-
             Direction enemyDir = rc.getLocation().directionTo(target.getLocation());
 
             if ((target.getType() == RobotType.TANK || target.getType() == RobotType.SOLDIER)

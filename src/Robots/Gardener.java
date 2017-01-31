@@ -1,20 +1,15 @@
 package Robots;
 
 import Helpers.Economy;
-import Helpers.HelperMethods;
 import Helpers.Movement;
 import Main.RobotPlayer;
 import battlecode.common.*;
-
-import java.util.ArrayList;
-import java.util.HashMap;
 
 /**
  * Class for gardener robot.
  */
 public class Gardener {
     static RobotController rc = RobotPlayer.rc;
-    static HelperMethods helpers = RobotPlayer.helpers;
     static Movement move;
     static boolean watering;
     static MapLocation myArchon;
@@ -55,6 +50,17 @@ public class Gardener {
                     else{
                         move.moveToLoc(plantSpot);
 
+                    }
+                }
+
+                BulletInfo[] bullets = rc.senseNearbyBullets();
+
+                for (BulletInfo bullet : bullets) {
+                    if (move.willCollideWithMe(rc.getLocation(), bullet)) {
+                        // If enemy robots are nearby cry for help
+                        rc.broadcast(16, (int) rc.getLocation().x);
+                        rc.broadcast(17, (int) rc.getLocation().y);
+                        break;
                     }
                 }
 
@@ -128,17 +134,6 @@ public class Gardener {
                 move.stayInLocationRange(myArchon, 6, 70);
                 attempts++;
                 Clock.yield();
-            }
-        }
-    }
-
-    public static void tryToPlant() throws GameActionException {
-        Direction[] dirList = RobotPlayer.getDirList();
-        if(rc.getTeamBullets() > GameConstants.BULLET_TREE_COST) {
-            for (Direction dir : dirList) {
-                if (rc.canPlantTree(dir)) {
-                    rc.plantTree(dir);
-                }
             }
         }
     }

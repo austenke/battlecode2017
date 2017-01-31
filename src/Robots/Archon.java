@@ -57,6 +57,12 @@ public class Archon {
         // Scout count
         rc.broadcast(10, 0);
 
+        // Cry for help x
+        rc.broadcast(16, -1);
+
+        // Cry for help y
+        rc.broadcast(17, -1);
+
         Direction[] dirList = RobotPlayer.getDirList();
 
         // The code you want your robot to perform every round should be in this loop
