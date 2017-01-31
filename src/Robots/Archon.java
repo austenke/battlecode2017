@@ -19,6 +19,7 @@ public class Archon {
         this.rc = rc;
         this.helpers = helpers;
         this.econ = new Economy(rc);
+
     }
 
     public static void run() throws GameActionException {
@@ -53,6 +54,9 @@ public class Archon {
         // Gardener archon dist
         rc.broadcast(9, 6);
 
+        // Scout count
+        rc.broadcast(10, 0);
+
         // The code you want your robot to perform every round should be in this loop
         while (true) {
             // Try/catch blocks stop unhandled exceptions, which cause your robot to explode
@@ -60,7 +64,6 @@ public class Archon {
                 econ.build();
 
                 Clock.yield();
-
             } catch (Exception e) {
                 System.out.println("Archon Exception");
                 e.printStackTrace();

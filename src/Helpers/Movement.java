@@ -1,5 +1,6 @@
 package Helpers;
 
+import Main.RobotPlayer;
 import battlecode.common.*;
 
 import java.util.ArrayList;
@@ -13,52 +14,37 @@ import java.util.Random;
 public class Movement {
     private static Direction currentDir;
     private static Random rand;
-    private static RobotController rc;
+    static RobotController rc = RobotPlayer.rc;
 
-    public Movement(RobotController rc) {
+    public Movement() {
         currentDir = HelperMethods.randomDirection();
         rand = new Random(rc.getID());
-        this.rc = rc;
     }
 
     public static void move() throws GameActionException {
-        // If can move in current direction and will not run into bullets go there, else try other directions
-        if (rc.canMove(currentDir) && bulletsCollideAtLoc(rc.getLocation().add(currentDir, rc.getType().strideRadius)).size() == 0) {
-            rc.setIndicatorLine(rc.getLocation(), rc.getLocation().add(currentDir, 5),66, 244, 92);
-            rc.move(currentDir);
+        BulletInfo[] bullets = rc.senseNearbyBullets();
+
+        if (bullets.length > 0) {
+            MapLocation goToLoc = findWeighting(currentDir, bullets);
+            if (rc.canMove(goToLoc)) {
+                rc.move(goToLoc);
+            }
+            else {
+                rc.setIndicatorDot(rc.getLocation(), 244, 75, 66);
+                System.out.println("DODGE ERROR");
+            }
         }
         else {
-            // Generate a list of all possible directions that can be moved to
-            ArrayList<Direction> possibleDirections = tryDirs();
-
-            // Check if there are possible moves, otherwise don't bother
-            if (possibleDirections.size() > 0) {
-                int bulletsInPosCount = 0;
-                Direction safeDirToGo = possibleDirections.get(0);
-
-                // Loop through list of possible directions to find one that will avoid contact with bullets
-                for (Direction dirToGo : possibleDirections) {
-                    MapLocation newLoc = rc.getLocation().add(dirToGo, rc.getType().strideRadius);
-                    ArrayList<Float> bulletsInPath = bulletsCollideAtLoc(newLoc);
-
-                    if (bulletsInPath.size() == 0) {
-                        // Unclear why, but canMove sometimes changes value over the course of this method
-                        if (rc.canMove(dirToGo)) {
-                            currentDir = dirToGo;
-                            rc.setIndicatorLine(rc.getLocation(), rc.getLocation().add(currentDir, 5),66, 244, 92);
-                            rc.move(currentDir);
-                            return;
-                        }
-                    }
-                    else {
-                        if (bulletsInPosCount > bulletsInPath.size() && rc.canMove(safeDirToGo)) {
-                            bulletsInPosCount = bulletsInPath.size();
-                            safeDirToGo = dirToGo;
-                        }
-                    }
+            ArrayList<Direction> dirs = tryDirs();
+            if (dirs.size() > 0) {
+                currentDir = dirs.get(0);
+                if (rc.canMove(currentDir)) {
+                    rc.move(currentDir);
                 }
-
-                rc.move(safeDirToGo);
+                else {
+                    rc.setIndicatorDot(rc.getLocation(), 244, 75, 66);
+                    System.out.println("MOVE ERROR");
+                }
             }
         }
     }
@@ -85,19 +71,6 @@ public class Movement {
         float toVary = (rand.nextFloat() * (amtToVary * 2)) - amtToVary;
         return dir.rotateLeftDegrees(toVary);
     }
-
-    public static ArrayList<Float> bulletsCollideAtLoc(MapLocation loc) {
-        BulletInfo[] bullets = rc.senseNearbyBullets();
-        ArrayList<Float> bulletDistances = new ArrayList<>();
-        for (BulletInfo bullet : bullets) {
-            if (HelperMethods.willCollideWithMe(loc, bullet)) {
-                bulletDistances.add(loc.distanceTo(bullet.getLocation()));
-            }
-        }
-        return bulletDistances;
-    }
-
-
 
     /**
      * Gather a list of all viable movements in as close a direction to the original dir as possible
@@ -132,25 +105,6 @@ public class Movement {
         return availableDirs;
     }
 
-    // To be used when standing still, dodges bullets
-    public static void standingDodge() throws GameActionException {
-        if (bulletsCollideAtLoc(rc.getLocation()).size() > 0) {
-            // Generate a list of all possible directions that can be moved to
-            ArrayList<Direction> possibleDirections = tryDirs();
-
-            // Loop through list of possible directions to find one that will avoid contact with bullets
-            for (Direction dir : possibleDirections) {
-                rc.setIndicatorLine(rc.getLocation(), rc.getLocation().add(dir, 4),166, 193, 237);
-                MapLocation newLoc = rc.getLocation().add(dir, rc.getType().strideRadius);
-                if (bulletsCollideAtLoc(newLoc).size() == 0) {
-                    currentDir = dir;
-                    rc.move(currentDir);
-                    return;
-                }
-            }
-        }
-    }
-
     public static void stayInLocationRange(MapLocation loc, int minDist, int maxDist) throws GameActionException {
         MapLocation robotLoc = rc.getLocation();
         Direction dirToLoc = robotLoc.directionTo(loc);
@@ -180,32 +134,13 @@ public class Movement {
     }
 
     public static void moveToLoc(MapLocation loc) throws GameActionException {
-        if (rc.getLocation().distanceTo(loc) < 3 && (rc.getType() != RobotType.TANK)) {
-            standingDodge();
-        }
-        else {
-            Direction dirToLoc = rc.getLocation().directionTo(loc);
-            MapLocation currentLoc = rc.getLocation();
-            // Loop 3 moves in advance, see if area is clear
-            for (int i = 0; i < 3; i++) {
-                MapLocation newLoc = currentLoc.add(dirToLoc, rc.getType().strideRadius);
-                if (rc.isLocationOccupied(newLoc) && newLoc.distanceTo(loc) > 3) {
-                    rc.setIndicatorLine(rc.getLocation(), loc, 244, 98, 66);
-                    // Path is occupied, just move normally
-                    move();
-                    return;
-                }
-            }
-            // Area is clear, proceed with move
-            rc.setIndicatorLine(rc.getLocation(), loc, 66, 244, 244);
-            currentDir = dirToLoc;
-            move();
-        }
+        Direction dirToLoc = rc.getLocation().directionTo(loc);
+        currentDir = dirToLoc;
+        move();
     }
 
     public static void tankMoveToLoc(MapLocation loc) throws GameActionException {
         if(rc.getLocation().distanceTo(loc) >= 3){
-            rc.setIndicatorLine(rc.getLocation(), loc, 244, 98, 66);
             Direction dirToLoc = rc.getLocation().directionTo(loc);
             MapLocation currentLoc = rc.getLocation();
             // Loop 5 moves in advance, see if area is clear
@@ -220,5 +155,81 @@ public class Movement {
             currentDir = dirToLoc;
             tankMove();
         }
+    }
+
+    public static MapLocation findWeighting(Direction goingDir, BulletInfo[] bullets) {
+        MapLocation goingLoc = rc.getLocation().add(goingDir, rc.getType().strideRadius);
+        ArrayList<MapLocation> possibleLocs = new ArrayList<>();
+        int bestScore = 9999;
+        MapLocation bestLoc = null;
+
+        for (Direction dir : RobotPlayer.getDirList()) {
+            possibleLocs.add(rc.getLocation().add(dir, rc.getType().strideRadius));
+        }
+
+        for (MapLocation loc : possibleLocs) {
+            float curScore = 0f;
+
+            if (rc.canMove(loc)) {
+                int collisionCount = 0;
+                for (BulletInfo bullet : bullets) {
+                    if (collisionCount > 4) {
+                        break;
+                    } else if (willCollideWithMe(loc, bullet)) {
+                        // Since we will round curScore later, make this number larger and guarantee it is at least 1
+                        curScore += ((bullet.damage / loc.distanceTo(bullet.getLocation())) + 1) * 15;
+                        collisionCount++;
+                    }
+                }
+
+                int compareScore = Math.round(curScore);
+                if (compareScore < bestScore) {
+                    bestScore = compareScore;
+                    bestLoc = loc;
+                } else if (compareScore == bestScore && loc.distanceTo(goingLoc) < bestLoc.distanceTo(goingLoc)) {
+                    bestLoc = loc;
+                }
+            }
+        }
+
+        if (bestLoc == null || !rc.canMove(bestLoc)) {
+            return rc.getLocation();
+        }
+        else {
+            return bestLoc;
+        }
+    }
+
+    /**
+     * A slightly more complicated example function, this returns true if the given bullet is on a collision
+     * course with the current robot. Doesn't take into account objects between the bullet and this robot.
+     *
+     * @param bullet The bullet in question
+     * @return True if the line of the bullet's path intersects with this robot's current position.
+     */
+    public static boolean willCollideWithMe(MapLocation loc, BulletInfo bullet) {
+        MapLocation myLocation = loc;
+
+        // Get relevant bullet information
+        Direction propagationDirection = bullet.dir;
+        MapLocation bulletLocation = bullet.location;
+
+        // Calculate bullet relations to this robot
+        Direction directionToRobot = bulletLocation.directionTo(myLocation);
+        float distToRobot = bulletLocation.distanceTo(myLocation);
+        float theta = propagationDirection.radiansBetween(directionToRobot);
+
+        // If theta > 90 degrees, then the bullet is traveling away from us and we can break early
+        if (Math.abs(theta) > Math.PI/2) {
+            return false;
+        }
+
+        // distToRobot is our hypotenuse, theta is our angle, and we want to know this length of the opposite leg.
+        // This is the distance of a line that goes from myLocation and intersects perpendicularly with propagationDirection.
+        // This corresponds to the smallest radius circle centered at our location that would intersect with the
+        // line that is the path of the bullet.
+        float perpendicularDist = (float)Math.abs(distToRobot * Math.sin(theta)); // soh cah toa :)
+
+        return (perpendicularDist <= rc.getType().bodyRadius);
     }
 }

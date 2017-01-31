@@ -2,23 +2,31 @@ package Robots;
 
 import Helpers.HelperMethods;
 import Helpers.Movement;
+import Main.RobotPlayer;
 import battlecode.common.*;
 
 /**
  * Class for lumberjack robot.
  */
 public class Lumberjack {
-    static RobotController rc;
-    static HelperMethods helpers;
+    static RobotController rc = RobotPlayer.rc;
+    static HelperMethods helpers = RobotPlayer.helpers;
     static Movement move;
 
-    public Lumberjack(RobotController rc, HelperMethods helpers) {
-        this.rc = rc;
-        this.helpers = helpers;
-        this.move = new Movement(rc);
+    public Lumberjack() {
+        this.move = new Movement();
     }
 
     public static void run() throws GameActionException {
+        MapLocation[] archons = rc.getInitialArchonLocations(rc.getTeam());
+        MapLocation myArchon = archons[0];
+
+        for (MapLocation archonLoc : archons) {
+            if (rc.getLocation().distanceTo(myArchon) > rc.getLocation().distanceTo(archonLoc)) {
+                myArchon = archonLoc;
+            }
+        }
+
         while (true) {
             try {
                 RobotInfo[] bots = rc.senseNearbyRobots();
@@ -26,7 +34,7 @@ public class Lumberjack {
                     if (b.getTeam() != rc.getTeam() && rc.canStrike()) {
                         rc.strike();
                         Direction chase = rc.getLocation().directionTo(b.getLocation());
-                        if (rc.canMove(chase)) {
+                        if (rc.canMove(chase) && rc.getLocation().distanceTo(myArchon) < 50) {
                             rc.move(chase);
                         }
                         break;
@@ -40,7 +48,7 @@ public class Lumberjack {
                     }
                 }
                 if (! rc.hasAttacked()) {
-                    move.move();
+                    move.stayInLocationRange(myArchon, 5, 40);
                 }
                 Clock.yield();
             } catch (Exception e) {
