@@ -33,9 +33,8 @@ public class Lumberjack {
                 for (RobotInfo b : bots) {
                     if (b.getTeam() != rc.getTeam() && rc.canStrike()) {
                         rc.strike();
-                        Direction chase = rc.getLocation().directionTo(b.getLocation());
-                        if (rc.canMove(chase) && rc.getLocation().distanceTo(myArchon) < 50) {
-                            rc.move(chase);
+                        if (rc.getLocation().distanceTo(myArchon) < 50) {
+                            move.moveToLoc(b.getLocation());
                         }
                         break;
                     }

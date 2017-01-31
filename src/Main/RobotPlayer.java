@@ -19,7 +19,7 @@ public strictfp class RobotPlayer {
         // and to get information on its current status.
         RobotPlayer.rc = rc;
         helpers = new HelperMethods(rc);
-        initDirList(6);
+        dirList = initDirList(6);
 
         // Here, we've separated the controls into a different method for each RobotType.
         // You can add the missing ones or rewrite this into your own control structure.
@@ -45,12 +45,14 @@ public strictfp class RobotPlayer {
         }
 	}
 
-    public static void initDirList(int size){
+    public static Direction[] initDirList(int size){
+        Direction[] tempDirList = new Direction[size];
         float angleChange = 360 / size;
         for(int i=0;i<size;i++) {
             float angle = angleChange * i;
-            dirList[i]=new Direction((float) Math.toRadians(angle));
+            tempDirList[i] = new Direction((float) Math.toRadians(angle));
         }
+        return tempDirList;
     }
 
     public static Direction[] getDirList(){

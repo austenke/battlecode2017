@@ -27,14 +27,14 @@ public class Soldier {
             }
         }
 
-        int soldierCount = rc.readBroadcast(3);
+        // Channel 3 is initialized with -1, add 1 to this
+        int soldierCount = rc.readBroadcast(3) + 1;
         int stayWithMe = -1;
-        if (soldierCount < 3 || (soldierCount + 1) % 3 == 0) {
+        // Broadcasts are weird. This makes things work correctly, don't change this.
+        if (soldierCount == 0 || (soldierCount + 1) % 10 < 2) {
             stayWithMe = 1;
-            //System.out.println("I'm a builder gardener!");
         } else {
             stayWithMe = 0;
-            //System.out.println("I'm a planter gardener!");
         }
         rc.broadcast(3, soldierCount + 1);
 
@@ -58,7 +58,9 @@ public class Soldier {
         while (true) {
             // Try/catch blocks stop unhandled exceptions, which cause your robot to explode
             try {
-                RobotInfo[] enemyRobots = rc.senseNearbyRobots(-1, rc.getTeam().opponent());
+                shootNearby();
+                RobotInfo[] enemyRobots = rc.senseNearbyRobots(-1, enemy);
+                TreeInfo[] enemyTrees = rc.senseNearbyTrees(-1, enemy);
                 int enemyTankX = rc.readBroadcast(3);
                 int enemyTankY = rc.readBroadcast(4);
 
@@ -66,19 +68,19 @@ public class Soldier {
                     MapLocation enemyTankLoc = new MapLocation(enemyTankX, enemyTankY);
 
                     // See if tank is in area, if not clear broadcast
-                    if (rc.getLocation().distanceTo(enemyTankLoc) > 5) {
+                    if (rc.getLocation().distanceTo(enemyTankLoc) < 5) {
+                        boolean didBroacast = false;
                         for (RobotInfo robot : enemyRobots) {
                             if (robot.getType() == RobotType.TANK) {
                                 rc.broadcast(3, (int) robot.getLocation().x);
                                 rc.broadcast(4, (int) robot.getLocation().y);
-
+                                didBroacast = true;
+                                break;
                             }
-                            // This will run a bunch but will not matter overall if there is a tank in range,
-                            // make this more efficient is bytecode is an issue
-                            else {
-                                rc.broadcast(3, -1);
-                                rc.broadcast(4, -1);
-                            }
+                        }
+                        if (!didBroacast) {
+                            rc.broadcast(3, -1);
+                            rc.broadcast(4, -1);
                         }
                     }
 
@@ -89,14 +91,71 @@ public class Soldier {
                 else if (enemyRobots.length > 0) {
                     move.stayInLocationRange(enemyRobots[0].getLocation(),
                             (int) rc.getType().sensorRadius - 3, (int) rc.getType().sensorRadius - 1);
+                    if (enemyRobots[0].getType() == RobotType.SOLDIER) {
+                        rc.broadcast(5, (int)enemyRobots[0].getLocation().x);
+                        rc.broadcast(6, (int)enemyRobots[0].getLocation().y);
+                    }
+                    else if (enemyRobots[0].getType() == RobotType.TANK) {
+                        rc.broadcast(3, (int)enemyRobots[0].getLocation().x);
+                        rc.broadcast(4, (int)enemyRobots[0].getLocation().y);
+                    }
+                }
+                else if (enemyTrees.length > 0) {
+                    move.stayInLocationRange(enemyTrees[0].getLocation(),
+                            (int) rc.getType().sensorRadius - 3, (int) rc.getType().sensorRadius - 1);
                 }
                 else {
-                    move.move();
+                    int enemySoldierX = rc.readBroadcast(5);
+                    int enemySoldierY = rc.readBroadcast(6);
+                    int enemyGardeningX = rc.readBroadcast(7);
+                    int enemyGardeningY = rc.readBroadcast(8);
+
+                    if (enemySoldierX != -1 && enemySoldierY!= -1) {
+                        MapLocation enemySoldierLoc = new MapLocation(enemySoldierX, enemySoldierY);
+
+                        // See if soldier is in area, if not clear broadcast
+                        if (rc.getLocation().distanceTo(enemySoldierLoc) < 5) {
+                            boolean didBroacast = false;
+                            for (RobotInfo robot : enemyRobots) {
+                                if (robot.getType() == RobotType.SOLDIER) {
+                                    rc.broadcast(5, (int) robot.getLocation().x);
+                                    rc.broadcast(6, (int) robot.getLocation().y);
+                                    didBroacast = true;
+                                    break;
+                                }
+                            }
+                            if (!didBroacast) {
+                                rc.broadcast(5, -1);
+                                rc.broadcast(6, -1);
+                            }
+                        }
+
+                        move.stayInLocationRange(enemySoldierLoc,
+                                (int) rc.getType().sensorRadius - 3, (int) rc.getType().sensorRadius - 1);
+                    }
+                    else if (enemyGardeningX != -1 && enemyGardeningY!= -1) {
+                        MapLocation enemyGardeningLoc = new MapLocation(enemyGardeningX, enemyGardeningY);
+
+                        // See if tree is in area, if not clear broadcast
+                        if (rc.getLocation().distanceTo(enemyGardeningLoc) < 5) {
+                            if (enemyTrees.length > 0) {
+                                rc.broadcast(7, (int) enemyTrees[0].getLocation().x);
+                                rc.broadcast(8, (int) enemyTrees[0].getLocation().y);
+                            }
+                            else {
+                                rc.broadcast(7, -1);
+                                rc.broadcast(8, -1);
+                            }
+                        }
+
+                        move.stayInLocationRange(enemyGardeningLoc,
+                                (int) rc.getType().sensorRadius - 3, (int) rc.getType().sensorRadius - 1);
+                    }
+                    else {
+                        move.move();
+                    }
                 }
-
-                shootNearby();
                 Clock.yield();
-
             } catch (Exception e) {
                 System.out.println("Soldier Exception");
                 try {
@@ -121,7 +180,10 @@ public class Soldier {
                     lowestHealthRobot = robot;
                 }
             }
-            if(rc.canFireSingleShot()){
+            if (rc.canFireTriadShot()) {
+                rc.fireTriadShot(rc.getLocation().directionTo(lowestHealthRobot.getLocation()));
+            }
+            else if(rc.canFireSingleShot()){
                 rc.fireSingleShot(rc.getLocation().directionTo(lowestHealthRobot.getLocation()));
             }
         }
@@ -129,18 +191,62 @@ public class Soldier {
 
     public static void shootNearby() throws GameActionException {
         RobotInfo[] enemyRobots = rc.senseNearbyRobots(-1, rc.getTeam().opponent());
+        TreeInfo[] enemyTrees = rc.senseNearbyTrees(-1, rc.getTeam().opponent());
         if (enemyRobots.length > 0) {
+            if (rc.canFireTriadShot()) {
+                RobotInfo lowestHealthRobot = null;
+                for (RobotInfo robot : enemyRobots) {
+                    // Immediately shoot at tank
+                    if (robot.getType() == RobotType.TANK) {
+                        lowestHealthRobot = robot;
+                        break;
+                    }
+                    else if (robot.getType() == RobotType.SOLDIER &&
+                            (lowestHealthRobot == null || lowestHealthRobot.health > robot.health)) {
+                        lowestHealthRobot = robot;
+                    }
+                }
+
+                if (lowestHealthRobot != null) {
+                    Direction dirToAdd = rc.getLocation().directionTo(lowestHealthRobot.getLocation());
+                    // ...Then fire three bullets in the direction of the enemy.
+                    rc.fireTriadShot(dirToAdd);
+                    rc.setIndicatorLine(rc.getLocation(), rc.getLocation().add(dirToAdd, 5), 66, 134, 244);
+                    return;
+                }
+            }
+
             if (rc.canFireSingleShot()) {
                 RobotInfo lowestHealthRobot = enemyRobots[0];
                 for (RobotInfo robot : enemyRobots) {
-                    if (lowestHealthRobot.health > robot.health) {
+                    // Immediately shoot at tank
+                    if (robot.getType() == RobotType.TANK) {
+                        lowestHealthRobot = robot;
+                        break;
+                    }
+                    else if (lowestHealthRobot.health > robot.health) {
                         lowestHealthRobot = robot;
                     }
                 }
                 // ...Then fire a bullet in the direction of the enemy.
                 rc.fireSingleShot(rc.getLocation().directionTo(lowestHealthRobot.getLocation()));
+                return;
             }
 
+            //System.out.println("CANT FIRE SHOT " + rc.getTeamBullets() + rc.hasAttacked());
+            //rc.setIndicatorDot(rc.getLocation(), 244, 80, 66);
+        }
+        else if (enemyTrees.length > 0) {
+            if (rc.canFireSingleShot()) {
+                TreeInfo lowestHealthTree = enemyTrees[0];
+                for (TreeInfo tree : enemyTrees) {
+                    if (lowestHealthTree.health > tree.health) {
+                        lowestHealthTree = tree;
+                    }
+                }
+                // ...Then fire a bullet in the direction of the enemy.
+                rc.fireSingleShot(rc.getLocation().directionTo(lowestHealthTree.getLocation()));
+            }
         }
     }
 }
