@@ -33,18 +33,14 @@ public class Lumberjack {
                 RobotInfo[] bots = rc.senseNearbyRobots(-1, rc.getTeam().opponent());
                 TreeInfo[] trees = rc.senseNearbyTrees();
                 if (bots.length > 0 && rc.canStrike()) {
-                    for (RobotInfo b : bots) {
-                        if (rc.getLocation().distanceTo(b.getLocation()) <= GameConstants.LUMBERJACK_STRIKE_RADIUS) {
-                            rc.strike();
-                            action = true;
-                        }
-                        else {
-                            if (rc.getLocation().distanceTo(myArchon) < 50) {
-                                move.moveToLoc(b.getLocation());
-                                action = true;
-                            }
-                        }
-                        break;
+                    if (rc.getLocation().distanceTo(myArchon) < 50) {
+                        move.moveToLoc(bots[0].getLocation());
+                        action = true;
+                    }
+
+                    if (rc.getLocation().distanceTo(bots[0].getLocation()) < GameConstants.LUMBERJACK_STRIKE_RADIUS) {
+                        rc.strike();
+                        action = true;
                     }
                 }
                 else if (trees.length > 0) {

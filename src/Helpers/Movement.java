@@ -144,21 +144,9 @@ public class Movement {
     }
 
     public static void tankMoveToLoc(MapLocation loc) throws GameActionException {
-        if(rc.getLocation().distanceTo(loc) >= 3){
-            Direction dirToLoc = rc.getLocation().directionTo(loc);
-            MapLocation currentLoc = rc.getLocation();
-            // Loop 5 moves in advance, see if area is clear
-            for (int i = 0; i < 5; i++) {
-                MapLocation newLoc = currentLoc.add(dirToLoc, rc.getType().strideRadius);
-                if (rc.isLocationOccupied(newLoc) && newLoc.distanceTo(loc) > 2) {
-                    tankMove();
-                    return;
-                }
-            }
-            // Area is clear, proceed with move
-            currentDir = dirToLoc;
-            tankMove();
-        }
+        Direction dirToLoc = rc.getLocation().directionTo(loc);
+        currentDir = dirToLoc;
+        tankMove();
     }
 
     public static MapLocation findWeighting(Direction goingDir, BulletInfo[] bullets) {
