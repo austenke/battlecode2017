@@ -68,7 +68,6 @@ public class Economy {
             int numRobots = rc.readBroadcast(12 * myArchon);
             if(rc.getType() == RobotType.GARDENER){
                 if(tankBuilder){
-                    System.out.println(tankBuilder);
                     if(shitBuilt == 0){
                         if(rc.getTeamBullets() >= 50){
                             Direction[] dirList = RobotPlayer.getDirList();
@@ -86,7 +85,6 @@ public class Economy {
                         buildTank(numRobots);
                     }
                 }else{
-                    System.out.println(rc.readBroadcast(13 * myArchon));
                     if(rc.readBroadcast(13 * myArchon) == 0 || rc.getRoundNum() - tankRequestRound >= 200){
                         order();
                         gardenerBuild(numRobots);

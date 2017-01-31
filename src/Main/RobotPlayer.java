@@ -25,7 +25,7 @@ public strictfp class RobotPlayer {
         // You can add the missing ones or rewrite this into your own control structure.
         switch (rc.getType()) {
             case ARCHON:
-                new Archon().run();
+                new Archon(rc,helpers).run();
                 break;
             case GARDENER:
                 new Gardener().run();

@@ -122,7 +122,7 @@ public class Gardener {
                     highestPlantCount = plantCount;
                     potentialPlantSpot = myLoc;
                 }
-                Movement.stayInLocationRange(myArchon, 6, 70);
+                move.stayInLocationRange(myArchon, 6, 70);
                 attempts++;
                 Clock.yield();
             }
