@@ -36,16 +36,16 @@ public class Economy {
         priorities.add(tankPriority);
 
         MapLocation archons[] = rc.getInitialArchonLocations(rc.getTeam());
-        myArchon = 1;
+        myArchon = 0;
         for(int i = 1; i < archons.length; i++){
-            if (rc.getLocation().distanceTo(archons[myArchon - 1]) > rc.getLocation().distanceTo(archons[i])) {
-                myArchon = i + 1;
+            if (rc.getLocation().distanceTo(archons[myArchon]) > rc.getLocation().distanceTo(archons[i])) {
+                myArchon = i;
             }
         }
+        myArchon++;
         if(rc.getType() == RobotType.GARDENER){
             try{
                 int gardenerCount = rc.readBroadcast(2);
-                boolean tankBuilder;
                 if((gardenerCount + 1) % 2 == 1){
                     tankBuilder = false;
                     rc.broadcast(2, gardenerCount + 1);
@@ -59,15 +59,20 @@ public class Economy {
         }
     }
 
-    public static void order(){
-        Collections.sort(priorities, pc);
-    }
+    public static void order(){ Collections.sort(priorities, pc); }
 
     public static void build(){
         try{
+            System.out.println(rc.readBroadcast(13));
+            System.out.println(tankBuilder);
             int numRobots = rc.readBroadcast(12 * myArchon);
-            if(rc.getType() == RobotType.GARDENER){
+            if(rc.getType() == RobotType.ARCHON){
+                if(shitBuilt == 0 || numRobots%(5 * shitBuilt) == 0){
+                    archonBuild(numRobots);
+                }
+            } else if(rc.getType() == RobotType.GARDENER){
                 if(tankBuilder){
+
                     if(shitBuilt == 0){
                         if(rc.getTeamBullets() >= 50){
                             Direction[] dirList = RobotPlayer.getDirList();
@@ -81,7 +86,8 @@ public class Economy {
                             }
                         }
                     }
-                    if(rc.readBroadcast(13 * myArchon) == 1){
+                    if(rc.readBroadcast(13) == 1){
+                        System.out.println("taaaaaank");
                         buildTank(numRobots);
                     }
                 }else{
@@ -91,11 +97,7 @@ public class Economy {
                     }
                 }
             }
-            else if(rc.getType() == RobotType.ARCHON){
-                if(shitBuilt == 0 || numRobots%(5 * shitBuilt) == 0){
-                    archonBuild(numRobots);
-                }
-            }
+
         }catch (GameActionException e) {
             e.printStackTrace();
         }
@@ -142,10 +144,11 @@ public class Economy {
 
     public static void gardenerBuild(int numRobots){
         try{
-            if(shitBuilt <= 10){
+            if(shitBuilt < 10){
                 earlyGameBuild(numRobots);
                 return;
             }
+
             Priority top = priorities.get(0);
 
             if(top.getType() == RobotType.SOLDIER){
@@ -154,6 +157,7 @@ public class Economy {
 
                     for(Direction d : dirList){
                         if(rc.canBuildRobot(RobotType.SOLDIER,d)){
+                            System.out.println("Late game soldier");
                             rc.buildRobot(RobotType.SOLDIER, d);
                             top.setPriority(top.getPriority() + 1);
                             shitBuilt++;
@@ -175,7 +179,7 @@ public class Economy {
                     }
                 }
             } else if(top.getType() == RobotType.TANK){
-                rc.broadcast(13 * myArchon, 1);  //tank request
+                rc.broadcast(13, 1);  //tank request
                 tankRequestRound = rc.getRoundNum();
                 shitBuilt++;
                 top.setPriority(top.getPriority() + 5);
@@ -188,18 +192,16 @@ public class Economy {
 
     public static void buildTank(int numRobots){
         try{
-            Priority top = priorities.get(0);
-
+            System.out.println("buildTank");
             if(rc.getTeamBullets() >= 300){
                 Direction[] dirList = RobotPlayer.getDirList();
 
                 for(Direction d : dirList){
                     if(rc.canBuildRobot(RobotType.TANK,d)){
                         rc.buildRobot(RobotType.TANK, d);
-                        top.setPriority(top.getPriority() + 5);
                         shitBuilt++;
                         rc.broadcast(12 * myArchon, numRobots + 1);
-                        rc.broadcast(13 * myArchon, 0); //tank build response
+                        rc.broadcast(13, 0); //tank build response
                     }
                 }
             }
@@ -330,17 +332,11 @@ public class Economy {
                     }
                     break;
                 case 9:
-                    if(rc.getTeamBullets() >= 300){
-                        Direction[] dirList = RobotPlayer.getDirList();
-
-                        for(Direction d : dirList){
-                            if(rc.canBuildRobot(RobotType.TANK,d)){
-                                rc.buildRobot(RobotType.TANK, d);
-                                shitBuilt++;
-                                rc.broadcast(12 * myArchon, numBots + 1);
-                            }
-                        }
-                    }
+                    rc.broadcast(13,1);  //tank request
+                    rc.broadcast(12 * myArchon, numBots + 1);
+                    tankRequestRound = rc.getRoundNum();
+                    shitBuilt++;
+                    System.out.println(shitBuilt);
                     break;
             }
         }catch (GameActionException e) {
